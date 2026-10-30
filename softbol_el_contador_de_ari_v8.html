@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#173c2d">
+<title>Softbol · Control de pitcheos</title>
+<style>
+:root{--green:#173c2d;--green2:#245a43;--lime:#d8f36a;--paper:#f5f7f2;--ink:#18251e;--muted:#66736a;--line:#dfe5dc;--red:#b63b35;--gold:#a66b0b}
+*{box-sizing:border-box;touch-action:manipulation}
+body{-webkit-text-size-adjust:100%;margin:0;background:var(--paper);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;user-select:none;-webkit-user-select:none}
+header{background:var(--green);color:white;padding:20px 16px 18px;border-radius:0 0 24px 24px}
+.wrap{max-width:720px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:#c6d8ca;font-weight:700}
+h1{font-size:24px;margin:6px 0 4px}header p{margin:0;color:#d5e3d8;font-size:14px}
+main{padding:16px;max-width:720px;margin:auto}.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;border:1px solid var(--line);background:white;border-radius:12px;padding:11px 8px;font-weight:700;color:var(--muted)}
+.tab.active{background:var(--green);color:white;border-color:var(--green)}
+.panel{display:none}.panel.active{display:block}
+.card{background:white;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #203b2610}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.label{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+input,select{font:inherit;border:1px solid var(--line);border-radius:11px;padding:11px;background:white;color:var(--ink);width:100%;min-width:0;touch-action:auto;user-select:auto;-webkit-user-select:auto}
+button{font:inherit;cursor:pointer;border:0;border-radius:13px;padding:13px 10px;font-weight:750;touch-action:manipulation}
+button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--green);color:white}.secondary{background:#edf2e9;color:var(--green)}.danger{background:#fff0ed;color:var(--red)}.tiny{padding:8px 10px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:#f2f5ef;border-radius:13px;padding:12px 8px;text-align:center}.stat strong{display:block;font-size:27px;line-height:1.2}.stat span{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.countbox{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.count{border-radius:14px;padding:14px;text-align:center;background:#f2f5ef}.count strong{font-size:30px;display:block}.count span{font-size:12px;color:var(--muted);font-weight:700}
+
+/* Selector de modos */
+.mode-selector{display:flex;gap:6px;background:#edf2e9;padding:4px;border-radius:14px;margin-bottom:14px}
+.mode-btn{flex:1;padding:8px 4px;font-size:13px;border-radius:10px;border:0;background:transparent;color:var(--muted);font-weight:700;cursor:pointer}
+.mode-btn.active{background:var(--green);color:white;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
+
+.mode-panel{display:none}
+.mode-panel.active{display:block}
+
+/* Botones de pitcheo */
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.pitchbtn{min-height:72px;text-align:left;padding:13px;display:flex;flex-direction:column;justify-content:center;gap:5px}.pitchbtn b{font-size:16px}.pitchbtn small{font-weight:500;opacity:.8}
+.ball{background:#fff0c9;color:#684407}.called{background:#e2edff;color:#1f4c88}.swing{background:#e9e2ff;color:#4d328a}.foul{background:#e8f3d2;color:#3b5a12}.play{background:#d9f2e3;color:#145f3b}.hbp{background:#ffe4df;color:#8b2e25}
+
+/* Estilos modo básico */
+.basic-group{margin-bottom:12px}
+.basic-group-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding-left:2px}
+.basic-group-title.good{color:#145f3b}
+.basic-group-title.bad{color:#8b2e25}
+.basic-grid{display:grid;grid-template-columns:1fr;gap:8px}
+
+/* Estilos modo contador simple */
+.simple-btn{width:100%;min-height:110px;font-size:22px;background:var(--green);color:white;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.simple-btn span{font-size:14px;opacity:0.8;font-weight:500}
+
+.section-title{font-size:17px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}.inline-actions{display:flex;gap:8px;flex-wrap:wrap}.inline-actions button{flex:1}
+.log{list-style:none;margin:0;padding:0}.log li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.log li:last-child{border:0}.empty{text-align:center;padding:28px 10px;color:var(--muted)}
+.game-item{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;background:white}.game-item h3{margin:0 0 5px;font-size:16px}.game-item p{margin:4px 0;color:var(--muted);font-size:13px}
+.inning-strip{display:flex;gap:6px;overflow:auto;padding:3px 0 10px}.inning{flex:0 0 auto;min-width:42px;background:#edf2e9;color:var(--green);padding:9px 10px;border-radius:10px;text-align:center;font-weight:800;border:1px solid transparent}.inning.current{background:var(--green);color:white}.notice{font-size:12px;color:var(--muted);line-height:1.45;margin:8px 2px}
+footer{text-align:center;padding:10px 16px 30px;color:var(--muted);font-size:12px}
+
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.modal-overlay.active{display:flex}
+.modal-card{background:white;padding:20px;border-radius:18px;max-width:360px;width:100%;box-shadow:0 10px 25px rgba(0,0,0,0.2);text-align:center}
+.modal-card h3{margin:0 0 10px;font-size:18px;color:var(--ink)}
+.modal-card p{margin:0 0 18px;font-size:14px;color:var(--muted)}
+.modal-actions{display:flex;gap:10px}
+.modal-actions button{flex:1}
+@media(min-width:560px){.actions{grid-template-columns:repeat(3,1fr)}.pitchbtn{min-height:78px}}
+
+/* Ocultar franja publicitaria de servidores gratuitos como tiiny.host */
+div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], footer + div, body > div:last-child {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno de anotación</div><h1>El contador de Ari</h1><p>Seguimiento personal · partidos e histórico por entrada</p></div></header>
+<main>
+<div class="tabs">
+<button class="tab active" data-tab="live">Partido</button>
+<button class="tab" data-tab="history">Histórico</button>
+<button class="tab" data-tab="settings">Ajustes</button>
+</div>
+<section id="live" class="panel active">
+ <div class="card">
+  <div class="row"><div style="flex:1"><div class="label">Partido / rival</div><input id="opponent" placeholder="Ej. vs. Club visitante"></div><div style="width:45%"><div class="label">Fecha</div><input id="gameDate" type="date"></div></div>
+  <div style="margin-top:12px"><div class="label">Pitcher</div><input id="pitcher" placeholder="Nombre de la pitcher"></div>
+  <div class="stats">
+   <div class="stat"><strong id="total">0</strong><span>Pitcheos</span></div>
+   <div class="stat"><strong id="inningTotal">0</strong><span>Entrada actual</span></div>
+   <div class="stat"><strong id="inningsDone">0</strong><span>Entradas cerradas</span></div>
+  </div>
+ </div>
+ <div class="card">
+  <div class="row"><h2 class="section-title" style="margin:0">Entrada <span id="inningLabel">1</span></h2><button class="secondary tiny" id="nextInning">Cerrar entrada →</button></div>
+  <div class="inning-strip" id="inningStrip"></div>
+  <div class="countbox">
+   <div class="count"><strong id="balls">0</strong><span>BOLAS</span></div>
+   <div class="count"><strong id="strikes">0</strong><span>STRIKES</span></div>
+  </div>
+  <p class="notice">Toca el resultado de cada lanzamiento. Cada botón suma un pitcheo; los fouls con dos strikes no aumentan el conteo de strikes.</p>
+ </div>
+ <div class="card">
+  <div class="row"><h2 class="section-title" style="margin:0 0 10px">Registrar lanzamiento</h2></div>
+  
+  <!-- Selector de Modos -->
+  <div class="mode-selector">
+   <button class="mode-btn active" data-mode="advanced">Avanzado</button>
+   <button class="mode-btn" data-mode="basic">Básico</button>
+   <button class="mode-btn" data-mode="simple">Contador</button>
+  </div>
+
+  <!-- Modo 1: Avanzado (Agrupado) -->
+  <div id="mode-advanced" class="mode-panel active">
+   <div class="basic-group">
+    <div class="basic-group-title good">🟢 Bolas buenas</div>
+    <div class="actions" style="margin-bottom:10px">
+     <button class="pitchbtn called" data-event="Strike cantado"><b>🔵 Strike cantado</b><small>No hizo swing</small></button>
+     <button class="pitchbtn swing" data-event="Strike tirándole"><b>🟣 Strike tirándole</b><small>Abanicó</small></button>
+     <button class="pitchbtn foul" data-event="Foul"><b>🟢 Foul</b><small>Contacto foul</small></button>
+     <button class="pitchbtn play" data-event="Hit del bateador"><b>🥎 Hit del bateador</b><small>Pelota en juego</small></button>
+    </div>
+   </div>
+   <div class="basic-group">
+    <div class="basic-group-title bad">🔴 Bolas malas</div>
+    <div class="actions">
+     <button class="pitchbtn ball" data-event="Bola"><b>🟡 Bola</b><small>Cuenta como bola</small></button>
+     <button class="pitchbtn hbp" data-event="Golpeada"><b>➕ Golpeada</b><small>Jugador golpeado</small></button>
+    </div>
+   </div>
+  </div>
+
+  <!-- Modo 2: Básico (2 Botones) -->
+  <div id="mode-basic" class="mode-panel">
+   <div class="basic-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button class="pitchbtn play" data-event="Strike cantado" style="min-height:90px;font-size:18px"><b>🟢 Bola Buena</b><small>Strike / Foul / Hit</small></button>
+    <button class="pitchbtn hbp" data-event="Bola" style="min-height:90px;font-size:18px"><b>🟥 Bola Mala</b><small>Bola / Golpeado</small></button>
+   </div>
+  </div>
+
+  <!-- Modo 3: Contador Simple -->
+  <div id="mode-simple" class="mode-panel">
+   <button class="simple-btn" data-event="Strike cantado">
+    <b>➕ 1 Pitcheo Lanzado</b>
+    <span>Registra 1 pitcheo general</span>
+   </button>
+  </div>
+
+  <div class="inline-actions" style="margin-top:14px">
+   <button class="secondary" id="undo">↶ Deshacer último</button>
+   <button class="secondary" id="minusOne">−1 pitcheo</button>
+   <button class="danger" id="resetCount">Reiniciar conteo</button>
+  </div>
+ </div>
+ <div class="card">
+  <div class="row"><h2 class="section-title" style="margin:0">Últimos lanzamientos</h2><span class="muted" id="logCount">0 registrados</span></div>
+  <ul class="log" id="recentLog"></ul>
+ </div>
+ <div class="inline-actions">
+  <button class="primary" id="saveGame">Guardar partido</button>
+  <button class="secondary" id="newGame">Nuevo partido</button>
+ </div>
+ <p class="notice">Los datos se guardan en este navegador de este dispositivo. Usa «Guardar partido» para añadirlo al histórico.</p>
+</section>
+<section id="history" class="panel">
+ <div class="row" style="margin:4px 0 14px"><h2 class="section-title" style="margin:0">Partidos guardados</h2><button class="secondary tiny" id="export">Exportar Excel</button></div>
+ <div id="historyList"></div>
+</section>
+<section id="settings" class="panel">
+ <div class="card">
+  <h2 class="section-title">Preferencias</h2>
+  <label class="label" for="defaultPitcher">Nombre de la pitcher</label>
+  <input id="defaultPitcher" placeholder="Nombre">
+  <button class="primary" style="width:100%;margin-top:12px" id="saveSettings">Guardar nombre</button>
+ </div>
+ <div class="card">
+  <h2 class="section-title">Datos y privacidad</h2>
+  <p class="muted">Esta versión guarda partidos en el almacenamiento local del navegador. No se envían a ningún servidor. Puedes exportar el histórico a Excel con análisis estadístico.</p>
+  <button class="danger" id="deleteAll">Borrar todo el histórico</button>
+ </div>
+</section>
+</main>
+
+<div class="modal-overlay" id="customModal">
+ <div class="modal-card">
+  <h3 id="modalTitle">Confirmación</h3>
+  <p id="modalMsg">¿Estás seguro?</p>
+  <div class="modal-actions">
+   <button class="secondary" id="modalCancel">Cancelar</button>
+   <button class="primary" id="modalConfirm">Aceptar</button>
+  </div>
+ </div>
+</div>
+
+<footer>Softbol Pitch Tracker · versión inicial gratuita</footer>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toLocaleDateString('en-CA');
+let state={opponent:'',date:today(),pitcher:'',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false};
+let history=[];
+try{history=JSON.parse(localStorage.getItem('softbolHistory')||'[]')}catch(e){}
+try{const s=JSON.parse(localStorage.getItem('softbolCurrent')||'null');if(s)state=s}catch(e){}
+const saveCurrent=()=>{try{localStorage.setItem('softbolCurrent',JSON.stringify(state))}catch(e){}};
+const saveHistory=()=>{try{localStorage.setItem('softbolHistory',JSON.stringify(history))}catch(e){}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isHit=e=>e==='Hit del bateador'||e==='En juego';
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+ btn.addEventListener('click', () => {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  $(`mode-${btn.dataset.mode}`).classList.add('active');
+ });
+});
+
+function showModal(title, message, isDanger=false) {
+ return new Promise(resolve => {
+  $('modalTitle').textContent = title;
+  $('modalMsg').textContent = message;
+  const confirmBtn = $('modalConfirm');
+  confirmBtn.className = isDanger ? 'danger' : 'primary';
+  $('customModal').classList.add('active');
+
+  const cleanUp = () => {
+   $('customModal').classList.remove('active');
+   confirmBtn.removeEventListener('click', onConfirm);
+   $('modalCancel').removeEventListener('click', onCancel);
+  };
+
+  const onConfirm = () => { cleanUp(); resolve(true); };
+  const onCancel = () => { cleanUp(); resolve(false); };
+
+  confirmBtn.addEventListener('click', onConfirm);
+  $('modalCancel').addEventListener('click', onCancel);
+ });
+}
+
+function syncInputs(){ $('opponent').value=state.opponent||'';$('gameDate').value=state.date||today();$('pitcher').value=state.pitcher||localStorage.getItem('softbolPitcher')||'Ari'; }
+function inningEvents(n){return state.events.filter(e=>e.inning===n)}
+function render(){
+ $('total').textContent=state.events.length;
+ $('inningTotal').textContent=inningEvents(state.inning).length;
+ $('inningsDone').textContent=Object.keys(state.innings||{}).length;
+ $('inningLabel').textContent=state.inning;
+ $('balls').textContent=state.balls;$('strikes').textContent=state.strikes;
+ $('logCount').textContent=state.events.length+' registrados';
+ 
+ let maxInning = Math.max(state.inning, ...Object.keys(state.innings||{}).map(Number), 1);
+ let buttonsHtml = '';
+ for(let i=1; i<=maxInning; i++){
+  buttonsHtml += `<button class="inning ${i===state.inning?'current':''}" data-inning="${i}">${i}</button>`;
+ }
+ $('inningStrip').innerHTML = buttonsHtml;
+ 
+ document.querySelectorAll('.inning').forEach(btn => {
+  btn.onclick = () => {
+   const selected = Number(btn.dataset.inning);
+   if(selected !== state.inning){
+    state.inning = selected;
+    recount();
+    render();
+   }
+  };
+ });
+
+ $('recentLog').innerHTML=state.events.slice(-8).reverse().map(e=>`<li><span><b>${esc(e.type)}</b><br><span class="muted">Entrada ${e.inning} · ${esc(e.time)}</span></span><b>#${e.num}</b></li>`).join('')||'<li class="empty">Aún no hay lanzamientos. ¡Registra el primero!</li>';
+ saveCurrent();
+}
+function resetAtBat(){state.balls=0;state.strikes=0}
+function addPitch(type){
+ state.opponent=$('opponent').value;state.date=$('gameDate').value||today();state.pitcher=$('pitcher').value;
+ const e={type,inning:state.inning,num:state.events.length+1,time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
+ state.events.push(e);
+ if(type==='Bola'){state.balls++;if(state.balls>=4)resetAtBat()}
+ else if(type==='Strike cantado'||type==='Strike tirándole'){state.strikes++;if(state.strikes>=3)resetAtBat()}
+ else if(type==='Foul'){if(state.strikes<2)state.strikes++}
+ else if(isHit(type)||type==='Golpeada'){resetAtBat()}
+ state.saved=false;render();
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));if(b.dataset.tab==='history')renderHistory()}));
+document.querySelectorAll('[data-event]').forEach(b=>b.addEventListener('click',()=>addPitch(b.dataset.event)));
+['opponent','gameDate','pitcher'].forEach(id=>$(id).addEventListener('change',()=>{state.opponent=$('opponent').value;state.date=$('gameDate').value;state.pitcher=$('pitcher').value;saveCurrent()}));
+
+$('nextInning').onclick=async()=>{
+ const confirmed = await showModal('Cerrar entrada', `¿Cerrar la entrada ${state.inning}? Se guardarán ${inningEvents(state.inning).length} pitcheos en el resumen.`);
+ if(!confirmed) return;
+ state.innings[state.inning]={pitches:inningEvents(state.inning).length,balls:inningEvents(state.inning).filter(e=>e.type==='Bola').length,strikes:inningEvents(state.inning).filter(e=>e.type.includes('Strike')).length,fouls:inningEvents(state.inning).filter(e=>e.type==='Foul').length};
+ state.inning++;resetAtBat();state.saved=false;render();
+};
+
+$('undo').onclick=()=>{if(!state.events.length)return;state.events.pop();recount();state.saved=false;render();};
+
+$('minusOne').onclick=async()=>{
+ if(!state.events.length){alert('No hay pitcheos para restar.');return}
+ const confirmed = await showModal('Restar pitcheo', '¿Restar un pitcheo? Se eliminará el último lanzamiento registrado.', true);
+ if(!confirmed) return;
+ state.events.pop();recount();state.saved=false;render();
+};
+
+function recount(){
+ state.balls=0;state.strikes=0;
+ for(const e of state.events.filter(e=>e.inning===state.inning)){
+  if(e.type==='Bola'){state.balls++;if(state.balls>=4)resetAtBat()}
+  else if(e.type==='Strike cantado'||e.type==='Strike tirándole'){state.strikes++;if(state.strikes>=3)resetAtBat()}
+  else if(e.type==='Foul'){if(state.strikes<2)state.strikes++}
+  else if(isHit(e.type)||e.type==='Golpeada')resetAtBat();
+ }
+}
+
+$('resetCount').onclick=async()=>{
+ const confirmed = await showModal('Reiniciar conteo', '¿Reiniciar solo el conteo actual de bolas y strikes? No se borrarán los pitcheos.');
+ if(confirmed){resetAtBat();render()}
+};
+
+function gameObj(){state.opponent=$('opponent').value.trim();state.date=$('gameDate').value||today();state.pitcher=$('pitcher').value.trim();return {id:Date.now(),opponent:state.opponent||'Partido sin rival',date:state.date,pitcher:state.pitcher||'Pitcher',total:state.events.length,innings:JSON.parse(JSON.stringify(state.innings)),events:state.events.slice(),inningTotals:Array.from({length:Math.max(state.inning,Object.keys(state.innings).length)},(_,i)=>({inning:i+1,pitches:state.events.filter(e=>e.inning===i+1).length,balls:state.events.filter(e=>e.inning===i+1&&e.type==='Bola').length,strikes:state.events.filter(e=>e.inning===i+1&&e.type.includes('Strike')).length,fouls:state.events.filter(e=>e.inning===i+1&&e.type==='Foul').length}))}}
+
+$('saveGame').onclick=()=>{if(!state.events.length){alert('Todavía no hay pitcheos para guardar.');return}const g=gameObj();const idx=history.findIndex(x=>x.id===g.id);if(idx>=0)history[idx]=g;else history.unshift(g);saveHistory();state.saved=true;saveCurrent();alert('Partido guardado en el histórico de este dispositivo.');renderHistory()};
+
+$('newGame').onclick=async()=>{
+ if(state.events.length&&!state.saved){
+  const confirmed = await showModal('Nuevo partido', 'Hay pitcheos sin guardar. ¿Empezar un partido nuevo igualmente?', true);
+  if(!confirmed) return;
+ }
+ state={opponent:'',date:today(),pitcher:localStorage.getItem('softbolPitcher')||'Ari',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false};
+ syncInputs();render();
+};
+
+function renderHistory(){
+ $('historyList').innerHTML=history.length?history.map(g=>`<article class="game-item"><div class="row"><h3>${esc(g.opponent)}</h3><b>${g.total} pitcheos</b></div><p>${esc(g.date)} · Pitcher: ${esc(g.pitcher)}</p><p>${(g.inningTotals||[]).map(i=>`Entrada ${i.inning}: ${i.pitches}`).join(' · ')||'Sin resumen por entrada'}</p><div class="inline-actions" style="margin-top:10px"><button class="secondary tiny" data-detail="${g.id}">Ver detalle</button><button class="danger tiny" data-delete="${g.id}">Eliminar</button></div><div id="detail-${g.id}"></div></article>`).join(''):'<div class="card empty">Todavía no hay partidos guardados.</div>';
+ document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>{const g=history.find(x=>x.id===Number(b.dataset.detail));const el=$('detail-'+g.id);if(el.innerHTML){el.innerHTML='';return}el.innerHTML=`<div style="margin-top:12px"><b>Resumen por entrada</b><ul class="log">${(g.inningTotals||[]).map(i=>`<li><span>Entrada ${i.inning}</span><b>${i.pitches} pitcheos</b></li>`).join('')}</ul><p class="muted">Bolas: ${g.events.filter(e=>e.type==='Bola').length} · Strikes cantados/tirándole: ${g.events.filter(e=>e.type.includes('Strike')).length} · Fouls: ${g.events.filter(e=>e.type==='Foul').length} · Hits del bateador: ${g.events.filter(e=>isHit(e.type)).length}</p></div>`});
+ document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{
+  const confirmed = await showModal('Eliminar partido', '¿Eliminar este partido del histórico?', true);
+  if(confirmed){history=history.filter(x=>x.id!==Number(b.dataset.delete));saveHistory();renderHistory()}
+ });
+}
+
+$('export').onclick=async()=>{
+  if(!history.length){alert('Todavía no hay partidos guardados para exportar.');return}
+  if(!window.ExcelJS){alert('No se ha podido cargar el módulo de Excel. Comprueba tu conexión a Internet y vuelve a intentarlo.');return}
+
+  function getEventsWithTurns(events){
+    const turns={},counts={};
+    let currentInning=null;
+    const processedEvents = events.map((e,index)=>{
+      if(e.inning!==currentInning){
+        currentInning=e.inning;
+        turns[currentInning]=1;
+        counts[currentInning]={balls:0,strikes:0};
+      }
+      const turn=turns[currentInning]||1;
+      const c=counts[currentInning];
+      let outcome = null;
+
+      if(e.type==='Bola'){
+        c.balls++;
+        if(c.balls>=4){
+          outcome = 'BB';
+          turns[currentInning]++;
+          counts[currentInning]={balls:0,strikes:0};
+        }
+      }else if(e.type==='Strike cantado'||e.type==='Strike tirándole'){
+        c.strikes++;
+        if(c.strikes>=3){
+          outcome = 'K';
+          turns[currentInning]++;
+          counts[currentInning]={balls:0,strikes:0};
+        }
+      }else if(e.type==='Foul'){
+        if(c.strikes<2)c.strikes++;
+      }else if(isHit(e.type)){
+        outcome = 'Hit';
+        turns[currentInning]++;
+        counts[currentInning]={balls:0,strikes:0};
+      }else if(e.type==='Golpeada'){
+        outcome = 'HBP';
+        turns[currentInning]++;
+        counts[currentInning]={balls:0,strikes:0};
+      }
+
+      return {...e, turn, pitchNumber: e.num||index+1, outcome};
+    });
+
+    const turnOutcomes = {};
+    processedEvents.forEach(e => {
+      const key = `${e.inning}-${e.turn}`;
+      if(e.outcome) turnOutcomes[key] = e.outcome;
+    });
+
+    return processedEvents.map(e => ({
+      ...e,
+      turnOutcome: turnOutcomes[`${e.inning}-${e.turn}`] || null
+    }));
+  }
+
+  const workbook=new ExcelJS.Workbook();
+  workbook.creator='El contador de Ari';
+  workbook.created=new Date();
+
+  // Pestaña 1: Resumen
+  const summary=workbook.addWorksheet('Resumen');
+  summary.columns=[
+    {header:'Fecha',key:'date',width:14},
+    {header:'Rival',key:'opponent',width:25},
+    {header:'Pitcher',key:'pitcher',width:20},
+    {header:'Pitcheos totales',key:'total',width:18},
+    {header:'Entrada',key:'inning',width:12},
+    {header:'Pitcheos entrada',key:'pitches',width:19},
+    {header:'Bolas',key:'balls',width:10},
+    {header:'Strikes',key:'strikes',width:10},
+    {header:'Fouls',key:'fouls',width:10}
+  ];
+  history.forEach(g=>(g.inningTotals||[]).forEach(i=>summary.addRow({
+    date:g.date,opponent:g.opponent,pitcher:g.pitcher,total:g.total,
+    inning:i.inning,pitches:i.pitches,balls:i.balls,strikes:i.strikes,fouls:i.fouls
+  })));
+
+  // Pestaña 2: Lanzamientos
+  const detail=workbook.addWorksheet('Lanzamientos');
+  detail.columns=[
+    {header:'Fecha',key:'date',width:14},
+    {header:'Rival',key:'opponent',width:24},
+    {header:'Pitcher',key:'pitcher',width:19},
+    {header:'Entrada (inning)',key:'inning',width:17},
+    {header:'Turno al bate',key:'turn',width:16},
+    {header:'N.º de pitcheo',key:'pitchNumber',width:17},
+    {header:'Hora',key:'time',width:12},
+    {header:'Resultado del lanzamiento',key:'type',width:28}
+  ];
+
+  history.forEach(g=>{
+    const events = getEventsWithTurns(g.events||[]);
+    events.forEach(e=>{
+      const row = detail.addRow({
+        date:g.date,opponent:g.opponent,pitcher:g.pitcher,
+        inning:e.inning,turn:e.turn,pitchNumber:e.pitchNumber,
+        time:e.time||'',type:e.type==='En juego'?'Hit del bateador':e.type
+      });
+
+      let bgColor = null;
+      if(e.turnOutcome === 'K') bgColor = 'FFE2EFDA';       // Verde claro (Ponche)
+      else if(e.turnOutcome === 'BB') bgColor = 'FFFCE4D6';  // Rojo muy suave (Base por bola)
+      else if(e.turnOutcome === 'HBP') bgColor = 'FFF8CBAD'; // Rojo medio (Golpeado)
+      else if(e.turnOutcome === 'Hit') bgColor = 'FFD9E1F2'; // Azul claro (Hit / Pelota en juego)
+
+      if(bgColor){
+        row.eachCell(cell=>{
+          cell.fill = {type:'pattern',pattern:'solid',fgColor:{argb:bgColor}};
+        });
+      }
+    });
+  });
+
+  // Pestaña 3: Estadísticas
+  const statsSheet=workbook.addWorksheet('Estadísticas');
+  statsSheet.columns=[
+    {header:'Fecha',key:'date',width:14},
+    {header:'Rival',key:'opponent',width:24},
+    {header:'Pitcher',key:'pitcher',width:20},
+    {header:'Total Pitcheos',key:'total',width:16},
+    {header:'Entradas Jugadas',key:'innings',width:17},
+    {header:'Bolas (Total)',key:'balls',width:14},
+    {header:'% Bolas',key:'pctBalls',width:12},
+    {header:'Strikes (Total)',key:'strikes',width:15},
+    {header:'% Strikes',key:'pctStrikes',width:12},
+    {header:'Fouls',key:'fouls',width:10},
+    {header:'Pelota en juego (Hits)',key:'hits',width:22},
+    {header:'Ponches (K)',key:'ks',width:14},
+    {header:'Bases por bola (BB)',key:'bbs',width:20},
+    {header:'Golpeados (HBP)',key:'hbps',width:16}
+  ];
+
+  history.forEach(g=>{
+    const events = getEventsWithTurns(g.events||[]);
+    const totalPitches = events.length;
+    const balls = events.filter(e=>e.type==='Bola').length;
+    const strikes = events.filter(e=>e.type.includes('Strike')).length;
+    const fouls = events.filter(e=>e.type==='Foul').length;
+    const hits = events.filter(e=>isHit(e.type)).length;
+    
+    const uniqueTurns = {};
+    events.forEach(e=>{
+      const key = `${e.inning}-${e.turn}`;
+      if(e.outcome) uniqueTurns[key] = e.outcome;
+    });
+
+    let ks=0, bbs=0, hbps=0;
+    Object.values(uniqueTurns).forEach(out=>{
+      if(out==='K') ks++;
+      if(out==='BB') bbs++;
+      if(out==='HBP') hbps++;
+    });
+
+    const maxInning = Math.max(0, ...events.map(e=>e.inning));
+
+    statsSheet.addRow({
+      date: g.date,
+      opponent: g.opponent,
+      pitcher: g.pitcher,
+      total: totalPitches,
+      innings: maxInning,
+      balls: balls,
+      pctBalls: totalPitches > 0 ? (balls / totalPitches) : 0,
+      strikes: strikes,
+      pctStrikes: totalPitches > 0 ? (strikes / totalPitches) : 0,
+      fouls: fouls,
+      hits: hits,
+      ks: ks,
+      bbs: bbs,
+      hbps: hbps
+    });
+  });
+
+  [summary, detail, statsSheet].forEach(ws=>{
+    ws.views=[{state:'frozen',ySplit:1}];
+    ws.autoFilter={from:{row:1,column:1},to:{row:1,column:ws.columnCount}};
+    ws.getRow(1).height=30;
+    ws.getRow(1).eachCell(cell=>{
+      cell.font={bold:true,color:{argb:'FFFFFFFF'},size:11};
+      cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF173C2D'}};
+      cell.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+      cell.border={bottom:{style:'medium',color:{argb:'FFD8F36A'}}};
+    });
+    for(let r=2;r<=ws.rowCount;r++){
+      const row=ws.getRow(r);
+      if(!row.height) row.height=23;
+      row.eachCell(cell=>{
+        cell.alignment={vertical:'middle',horizontal:'center'};
+        cell.border={bottom:{style:'hair',color:{argb:'FFE1E8DF'}}};
+      });
+    }
+  });
+
+  for(let r=2; r<=statsSheet.rowCount; r++){
+    statsSheet.getRow(r).getCell('pctBalls').numFmt = '0.0%';
+    statsSheet.getRow(r).getCell('pctStrikes').numFmt = '0.0%';
+  }
+
+  const buffer=await workbook.xlsx.writeBuffer();
+  const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='historico-softbol.xlsx';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
+$('saveSettings').onclick=()=>{localStorage.setItem('softbolPitcher',$('defaultPitcher').value.trim());$('pitcher').value=$('defaultPitcher').value.trim();state.pitcher=$('pitcher').value;saveCurrent();alert('Nombre guardado.')};
+
+$('deleteAll').onclick=async()=>{
+ const confirmed = await showModal('Borrar histórico', '¿Borrar permanentemente todos los partidos guardados en este navegador?', true);
+ if(confirmed){history=[];saveHistory();renderHistory();}
+};
+
+syncInputs();$('defaultPitcher').value=localStorage.getItem('softbolPitcher')||'Ari';render();
+})();
+</script>
+</body>
+</html>

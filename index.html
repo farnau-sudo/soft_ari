@@ -161,6 +161,12 @@ footer .footer-sub{opacity:0.85}
 .vs-orange{background:#ffe4df;border:1px solid #f8b1a8;color:#8b2e25}
 .vs-purple{background:#f3e8ff;border:1px solid #d5bfff;color:#6b21a8}
 
+/* Indicador de evolución histórico */
+.evolution-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;font-size:12px;font-weight:800;margin-top:6px}
+.evo-up{background:#d9f2e3;color:#145f3b;border:1px solid #a3e4c1}
+.evo-down{background:#ffe4df;color:#8b2e25;border:1px solid #f8b1a8}
+.evo-equal{background:#edf2e9;color:var(--muted);border:1px solid var(--line)}
+
 @media(min-width:560px){.actions{grid-template-columns:repeat(3,1fr)}.pitchbtn{min-height:78px}}
 
 /* Ocultar franja publicitaria de servidores gratuitos */
@@ -288,6 +294,17 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    <p class="notice" style="margin-top:6px">Por defecto está bloqueado para evitar alteraciones accidentales en las estadísticas del partido actual.</p>
   </div>
  </div>
+
+ <div class="card">
+  <h2 class="section-title">💾 Copia de seguridad (JSON)</h2>
+  <p class="muted" style="margin-bottom:12px">Exporta una copia de seguridad con todos tus partidos e histórico para guardarla en el ordenador o pasarla a otro iPhone. También puedes restaurarla cuando quieras.</p>
+  <div style="display:flex;gap:10px">
+   <button class="secondary" id="exportBackupBtn" style="flex:1">📤 Exportar JSON</button>
+   <button class="secondary" id="importBackupBtn" style="flex:1">📥 Importar JSON</button>
+   <input type="file" id="importFileInput" accept=".json" style="display:none">
+  </div>
+ </div>
+
  <div class="card">
   <h2 class="section-title">Datos y privacidad</h2>
   <p class="muted">Esta versión guarda partidos en el almacenamiento local del navegador. No se envían a ningún servidor. Puedes exportar el histórico a Excel con análisis estadístico.</p>
@@ -425,6 +442,22 @@ const saveHistory=()=>{try{localStorage.setItem('softbolHistory',JSON.stringify(
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const isHit=e=>e==='Hit del bateador'||e==='En juego';
 const isStrike=e=>e==='Strike'||e==='Strike cantado'||e==='Strike tirándole';
+
+// Gestor de Bloqueo Automático de Pantalla (Wake Lock API)
+let wakeLock = null;
+async function requestWakeLock() {
+ if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+  try {
+   wakeLock = await navigator.wakeLock.request('screen');
+  } catch (err) {}
+ }
+}
+document.addEventListener('visibilitychange', async () => {
+ if (wakeLock !== null && document.visibilityState === 'visible') {
+  await requestWakeLock();
+ }
+});
+requestWakeLock();
 
 function allowMidGameChange(){
  return $('allowModeChangeToggle').checked;
@@ -625,7 +658,7 @@ $('undo').onclick = handleUndo;
 $('mUndo').onclick = handleUndo;
 
 $('openMatchModeBtn').onclick = () => { render(); $('matchModeScreen').classList.add('active'); };
-$('closeMatchModeBtn').onclick = () => $('matchModeScreen').classList.remove('active');
+$('closeMatchModeBtn').onclick = () => { $('matchModeScreen').classList.remove('active'); };
 
 $('minusOne').onclick=async()=>{
  if(!state.events.length){alert('No hay pitcheos para restar.');return}
@@ -720,7 +753,7 @@ function getGameComputedStats(events, inningsObj){
 
   const isBasic = events.some(e => e.type === 'Bola Buena' || e.type === 'Bola Mala');
   const isSimple = events.some(e => e.type === 'Pitcheo General');
-  const goodPitches = events.filter(e => e.type === 'Bola Buena' || isStrike(e.type) || e.type === 'Foul' || isHit(e.type)).length;
+  const goodPitches = events.filter(e => e.type === 'Bola Buena' || isStrike(e.type) || e.type === 'Foul' || e.type === 'Hit del bateador').length;
   const badPitches = events.filter(e => e.type === 'Bola Mala' || e.type === 'Bola' || e.type === 'Golpeada').length;
 
   return {totalPitches, balls, strikes, fouls, hits, hbps, ks, bbs, uniqueInnings, totalTurns, isBasic, isSimple, goodPitches, badPitches};
@@ -779,10 +812,46 @@ function renderHistory(){
   return;
  }
 
+ // Calcular la media general de % de strikes / bolas buenas en el histórico
+ let totalPitchesAll = 0;
+ let totalGoodAll = 0;
+ let validGamesCount = 0;
+
+ history.forEach(g => {
+  const stats = getGameComputedStats(g.events||[], g.innings||{});
+  if(!stats.isSimple && stats.totalPitches > 0){
+   totalPitchesAll += stats.totalPitches;
+   totalGoodAll += stats.isBasic ? stats.goodPitches : stats.strikes;
+   validGamesCount++;
+  }
+ });
+
+ const overallAvg = totalPitchesAll > 0 ? (totalGoodAll / totalPitchesAll) : 0;
+
  $('historyList').innerHTML = history.map(g=>{
   const stats = getGameComputedStats(g.events||[], g.innings||{});
   const isSimple = g.mode === 'simple' || (g.events && g.events.every(e => e.type === 'Pitcheo General'));
   const isBasic = g.mode === 'basic' || (g.events && g.events.some(e => e.type === 'Bola Buena' || e.type === 'Bola Mala'));
+
+  // Calcular evolución respecto a la media
+  let evoHtml = '';
+  if(!isSimple && stats.totalPitches > 0){
+   const gameGood = isBasic ? stats.goodPitches : stats.strikes;
+   const gamePct = gameGood / stats.totalPitches;
+   
+   if(validGamesCount <= 1){
+    evoHtml = `<div class="evolution-badge evo-equal">📌 1.ᵉʳ partido (${(gamePct*100).toFixed(0)}% efectividad - Línea de base)</div>`;
+   } else {
+    const diff = (gamePct - overallAvg) * 100;
+    if(Math.abs(diff) < 1.5){
+     evoHtml = `<div class="evolution-badge evo-equal">➡️ En tu media (${(gamePct*100).toFixed(0)}% efectividad)</div>`;
+    } else if(diff > 0){
+     evoHtml = `<div class="evolution-badge evo-up">🟢 ▲ +${diff.toFixed(1)}% sobre tu media (${(gamePct*100).toFixed(0)}%)</div>`;
+    } else {
+     evoHtml = `<div class="evolution-badge evo-down">🔴 ▼ ${diff.toFixed(1)}% bajo tu media (${(gamePct*100).toFixed(0)}%)</div>`;
+    }
+   }
+  }
 
   let gridHtml = '';
   if(isSimple){
@@ -863,8 +932,10 @@ function renderHistory(){
      <div class="vs-info" style="flex:1">
       <strong>⚾ ${esc(g.opponent)}</strong>
       <span>📅 Fecha: ${esc(g.date)} &nbsp;·&nbsp; 👤 Pitcher: ${esc(g.pitcher)}</span>
+      ${evoHtml}
      </div>
-     <div>
+     <div style="display:flex;gap:6px">
+      <button class="primary tiny" data-whatsapp="${g.id}">💬 WhatsApp</button>
       <button class="danger tiny" data-delete="${g.id}">Eliminar</button>
      </div>
     </div>
@@ -875,6 +946,40 @@ function renderHistory(){
     <div id="detail-${g.id}" style="margin-top:8px"></div>
    </article>`;
  }).join('');
+
+ document.querySelectorAll('[data-whatsapp]').forEach(b=>b.onclick=()=>{
+  const g=history.find(x=>x.id===Number(b.dataset.whatsapp));
+  const stats = getGameComputedStats(g.events||[], g.innings||{});
+  const isSimple = g.mode === 'simple';
+  const isBasic = g.mode === 'basic';
+
+  let text = `🥎 *Resumen de Partido - Softball* 🥎\n`;
+  text += `🆚 Rival: ${g.opponent}\n`;
+  text += `📅 Fecha: ${g.date}\n`;
+  text += `👤 Pitcher: ${g.pitcher}\n\n`;
+
+  if(isSimple){
+    text += `• Total pitcheos: ${stats.totalPitches}\n`;
+    text += `• Innings pitcheando: ${stats.uniqueInnings}\n`;
+  } else if(isBasic){
+    text += `• Total pitcheos: ${stats.totalPitches}\n`;
+    text += `• Innings pitcheando: ${stats.uniqueInnings}\n`;
+    text += `• Bolas buenas: ${stats.goodPitches}\n`;
+    text += `• Bolas malas: ${stats.badPitches}\n`;
+  } else {
+    text += `• Total pitcheos: ${stats.totalPitches}\n`;
+    text += `• Turnos bateadores: ${stats.totalTurns}\n`;
+    text += `• Innings pitcheando: ${stats.uniqueInnings}\n`;
+    text += `• Ponchados (K): ${stats.ks}\n`;
+    text += `• Strikes: ${stats.strikes}\n`;
+    text += `• Hits (incl. fouls): ${stats.hits + stats.fouls}\n`;
+    text += `• Bolas + HBP: ${stats.balls + stats.hbps}\n`;
+    text += `• Bases por bola (BB): ${stats.bbs}\n`;
+  }
+
+  const encoded = encodeURIComponent(text);
+  window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+ });
 
  document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>{
   const g=history.find(x=>x.id===Number(b.dataset.detail));
@@ -888,6 +993,61 @@ function renderHistory(){
   if(confirmed){history=history.filter(x=>x.id!==Number(b.dataset.delete));saveHistory();renderHistory()}
  });
 }
+
+// Funciones de Copia de Seguridad JSON (Exportar / Importar)
+$('exportBackupBtn').onclick = () => {
+ const backupData = {
+  version: 1,
+  exportDate: new Date().toISOString(),
+  pitcher: localStorage.getItem('softbolPitcher') || '',
+  allowMidChange: localStorage.getItem('softbolAllowMidChange') || 'false',
+  history: history,
+  current: state
+ };
+ const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+ const downloadAnchor = document.createElement('a');
+ downloadAnchor.setAttribute("href", dataStr);
+ downloadAnchor.setAttribute("download", `copia-seguridad-softbol-${today()}.json`);
+ document.body.appendChild(downloadAnchor);
+ downloadAnchor.click();
+ downloadAnchor.remove();
+};
+
+$('importBackupBtn').onclick = () => {
+ $('importFileInput').click();
+};
+
+$('importFileInput').onchange = (event) => {
+ const fileReader = new FileReader();
+ if(event.target.files[0]){
+  fileReader.readAsText(event.target.files[0], "UTF-8");
+  fileReader.onload = async (e) => {
+   try {
+    const backup = JSON.parse(e.target.result);
+    if(backup && Array.isArray(backup.history)){
+     const confirmed = await showModal('Restaurar copia', 'Se cargarán los datos de la copia de seguridad. ¿Deseas reemplazar el histórico actual?', true);
+     if(confirmed){
+      history = backup.history;
+      if(backup.current) state = backup.current;
+      if(backup.pitcher) localStorage.setItem('softbolPitcher', backup.pitcher);
+      if(backup.allowMidChange) localStorage.setItem('softbolAllowMidChange', backup.allowMidChange);
+      saveHistory();
+      saveCurrent();
+      syncInputs();
+      if(state.currentMode) setModeDirect(state.currentMode); else render();
+      renderHistory();
+      alert('¡Copia de seguridad restaurada con éxito!');
+     }
+    } else {
+     alert('El archivo seleccionado no es válido o está corrupto.');
+    }
+   } catch(err) {
+    alert('Error al leer el archivo JSON.');
+   }
+   event.target.value = '';
+  };
+ }
+};
 
 $('export').onclick=async()=>{
   if(!history.length){alert('Todavía no hay partidos guardados para exportar.');return}
@@ -946,6 +1106,18 @@ $('export').onclick=async()=>{
       turnOutcome: turnOutcomes[`${e.inning}-${e.turn}`] || null
     }));
   }
+
+  // Media global para exportar al Excel
+  let totalPitchesAll = 0, totalGoodAll = 0, validGamesCount = 0;
+  history.forEach(g => {
+   const stats = getGameComputedStats(g.events||[], g.innings||{});
+   if(!stats.isSimple && stats.totalPitches > 0){
+    totalPitchesAll += stats.totalPitches;
+    totalGoodAll += stats.isBasic ? stats.goodPitches : stats.strikes;
+    validGamesCount++;
+   }
+  });
+  const overallAvg = totalPitchesAll > 0 ? (totalGoodAll / totalPitchesAll) : 0;
 
   const workbook=new ExcelJS.Workbook();
   workbook.creator='El contador de Ari';
@@ -1037,6 +1209,7 @@ $('export').onclick=async()=>{
     {header:'Jugador Golpeado (HBP)',key:'hbps',width:22},
     {header:'Bases por bola (BB)',key:'bbs',width:18},
     {header:'% Strikes / Buenas',key:'pctStrikes',width:18},
+    {header:'Evolución vs. Media',key:'evoMedia',width:20},
     {header:'% Fouls',key:'pctFouls',width:14},
     {header:'% Hits',key:'pctHits',width:14},
     {header:'% Bolas + HBP',key:'pctBallsHbp',width:16}
@@ -1046,6 +1219,18 @@ $('export').onclick=async()=>{
     const stats = getGameComputedStats(g.events||[], g.innings||{});
     const isSimple = g.mode === 'simple';
     const isBasic = g.mode === 'basic';
+
+    let evoText = '-';
+    if(!isSimple && stats.totalPitches > 0){
+     const gameGood = isBasic ? stats.goodPitches : stats.strikes;
+     const gamePct = gameGood / stats.totalPitches;
+     if(validGamesCount > 1){
+      const diff = (gamePct - overallAvg) * 100;
+      evoText = (diff > 0 ? '+' : '') + diff.toFixed(1) + '%';
+     } else {
+      evoText = 'Línea de base';
+     }
+    }
 
     const row = statsSheet.addRow({
       date: g.date,
@@ -1062,6 +1247,7 @@ $('export').onclick=async()=>{
       hbps: isSimple || isBasic ? '-' : stats.hbps,
       bbs: isSimple || isBasic ? '-' : stats.bbs,
       pctStrikes: isSimple || isBasic ? 0 : (stats.totalPitches > 0 ? (stats.strikes / stats.totalPitches) : 0),
+      evoMedia: evoText,
       pctFouls: isSimple || isBasic ? 0 : (stats.totalPitches > 0 ? (stats.fouls / stats.totalPitches) : 0),
       pctHits: isSimple || isBasic ? 0 : (stats.totalPitches > 0 ? (stats.hits / stats.totalPitches) : 0),
       pctBallsHbp: isSimple || isBasic ? 0 : (stats.totalPitches > 0 ? ((stats.balls + stats.hbps) / stats.totalPitches) : 0)

@@ -133,9 +133,18 @@ footer .footer-sub{opacity:0.85}
 .match-btn-inning{background:var(--lime);color:var(--green)}
 .match-btn-undo{background:#374151;color:#f3f4f6}
 
+/* Estilos mejorados para el visor de vídeo grande y cómodo */
 .radar-title{font-size:14px;font-weight:800;color:#5b21b6;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
-video{width:100%;max-height:200px;background:black;border-radius:10px;margin-bottom:8px}
-.frame-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+video{
+ width:100%;
+ max-height:340px; /* Vídeo mucho más grande y visible en vertical */
+ object-fit:contain;
+ background:black;
+ border-radius:14px;
+ margin-bottom:10px;
+}
+.frame-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.frame-btn-grid button{padding:14px;font-size:15px} /* Botones más grandes para los dedos */
 
 .visual-summary-card{background:white;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #203b2610}
 .vs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
@@ -167,7 +176,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador de vídeo manual en mph</p></div></header>
+<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador ampliado en mph</p></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Partido</button>
@@ -256,29 +265,29 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <button class="secondary" id="newGame">Nuevo partido</button>
  </div>
 
- <!-- Módulo Analizador de Vídeo (Beta) ubicado ABAJO DEL TODO -->
+ <!-- Módulo Analizador de Vídeo (Beta) optimizado con pantalla grande -->
  <div class="card" style="border:2px solid #a78bfa;background:#faf8ff;margin-top:20px">
   <div class="radar-title">
-   <span>🎬 Analizador de Vídeo por Fotogramas (Beta)</span>
+   <span>🎬 Analizador de Vídeo Ampliado (Beta)</span>
    <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
   </div>
-  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube tu vídeo de lanzamiento. Marca manualmente la salida y la llegada para calcular la velocidad exacta en mph.</p>
+  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube tu vídeo. El reproductor es ahora mucho más grande y cómodo para ver los detalles con claridad en el móvil.</p>
   
   <input type="file" id="videoInput" accept="video/*" style="margin-bottom:10px">
   <video id="videoPlayer" controls playsinline style="display:none"></video>
 
   <div id="videoControls" style="display:none">
-   <div style="display:flex;gap:6px;margin-bottom:6px">
-    <button class="secondary tiny" id="setStartFrame" style="flex:1">1️⃣ Marcar Salida (Mano)</button>
-    <button class="secondary tiny" id="setEndFrame" style="flex:1">2️⃣ Marcar Llegada (Guante)</button>
+   <div style="display:flex;gap:8px;margin-bottom:8px">
+    <button class="secondary tiny" id="setStartFrame" style="flex:1;padding:14px">1️⃣ Marcar Salida (Mano)</button>
+    <button class="secondary tiny" id="setEndFrame" style="flex:1;padding:14px">2️⃣ Marcar Llegada (Guante)</button>
    </div>
    <div class="frame-btn-grid">
     <button class="secondary tiny" id="prevFrame">◀ -1 Fotograma</button>
     <button class="secondary tiny" id="nextFrame">+1 Fotograma ▶</button>
    </div>
-   <div style="margin-top:10px;text-align:center;background:white;padding:10px;border-radius:10px;border:1px solid #d8b4fe">
+   <div style="margin-top:12px;text-align:center;background:white;padding:14px;border-radius:12px;border:2px solid #d8b4fe">
     <span class="label">Velocidad calculada</span>
-    <div style="font-size:24px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:13px">mph</span></div>
+    <div style="font-size:30px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:14px">mph</span></div>
    </div>
   </div>
  </div>
@@ -417,7 +426,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 
 <footer>
  <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V2)</div>
- <div class="footer-sub">Herramienta avanzada con analizador manual por fotogramas (Beta).</div>
+ <div class="footer-sub">Herramienta avanzada con vídeo ampliado en mph (Beta).</div>
  <div style="margin-top:4px">Creada por F. Arnau · Uso personal</div>
 </footer>
 
@@ -450,11 +459,10 @@ document.addEventListener('visibilitychange', async () => {
 });
 requestWakeLock();
 
-// Analizador de vídeo manual fiable por fotogramas
 let startFrameTime = null;
 let endFrameTime = null;
 let lastCalculatedSpeed = null;
-const frameStep = 1 / 240; // Precisión de 240fps para cámara lenta de iPhone
+const frameStep = 1 / 240;
 
 const videoInput = $('videoInput');
 const videoPlayer = $('videoPlayer');
@@ -1007,7 +1015,7 @@ $('export').onclick=async()=>{
         c.strikes++; if(c.strikes>=3){ outcome = 'K'; turns[currentInning]++; counts[currentInning]={balls:0,strikes:0}; }
       }else if(e.type==='Foul'){ if(c.strikes<2)c.strikes++; }
       else if(isHit(e.type)){ outcome = 'Hit'; turns[currentInning]++; counts[currentInning]={balls:0,strikes:0}; }
-      else if(e.type==='Golpeada'){ outcome = 'HBP'; turns[currentInning]++; counts[currentInning]={balls:0,strikes:0}; }
+      else if(isHit(e.type) || e.type==='Golpeada'){ outcome = 'HBP'; turns[currentInning]++; counts[currentInning]={balls:0,strikes:0}; }
 
       return {...e, turn, pitchNumber: e.num||index+1, outcome};
     });

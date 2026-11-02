@@ -167,7 +167,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador de vídeo instantáneo (mph)</p></div></header>
+<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador de vídeo manual en mph</p></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Partido</button>
@@ -198,33 +198,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    <div class="count" id="box2"><strong id="countVal2">0</strong><span id="countLabel2">STRIKES</span></div>
   </div>
   <p class="notice" id="mainNotice">Toca el resultado de cada lanzamiento. Cada botón suma un pitcheo.</p>
- </div>
-
- <!-- Módulo Analizador de Vídeo Corregido -->
- <div class="card" style="border:2px solid #a78bfa;background:#faf8ff">
-  <div class="radar-title">
-   <span>🎬 Analizador de Vídeo Automático</span>
-   <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
-  </div>
-  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube tu vídeo. La app calculará la velocidad en mph al instante con una estimación automática lista para afinar.</p>
-  
-  <input type="file" id="videoInput" accept="video/*" style="margin-bottom:10px">
-  <video id="videoPlayer" controls playsinline style="display:none"></video>
-
-  <div id="videoControls" style="display:none">
-   <div style="display:flex;gap:6px;margin-bottom:6px">
-    <button class="secondary tiny" id="setStartFrame" style="flex:1; background:#059669; color:white;">1️⃣ Salida (Mano)</button>
-    <button class="secondary tiny" id="setEndFrame" style="flex:1; background:#059669; color:white;">2️⃣ Llegada (Guante)</button>
-   </div>
-   <div class="frame-btn-grid">
-    <button class="secondary tiny" id="prevFrame">◀ -1 Fotograma</button>
-    <button class="secondary tiny" id="nextFrame">+1 Fotograma ▶</button>
-   </div>
-   <div style="margin-top:10px;text-align:center;background:white;padding:10px;border-radius:10px;border:1px solid #d8b4fe">
-    <span class="label">Velocidad calculada</span>
-    <div style="font-size:24px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:13px">mph</span></div>
-   </div>
-  </div>
  </div>
 
  <div class="card">
@@ -282,6 +255,34 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <button class="primary" id="saveGame">Guardar partido</button>
   <button class="secondary" id="newGame">Nuevo partido</button>
  </div>
+
+ <!-- Módulo Analizador de Vídeo (Beta) ubicado ABAJO DEL TODO -->
+ <div class="card" style="border:2px solid #a78bfa;background:#faf8ff;margin-top:20px">
+  <div class="radar-title">
+   <span>🎬 Analizador de Vídeo por Fotogramas (Beta)</span>
+   <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
+  </div>
+  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube tu vídeo de lanzamiento. Marca manualmente la salida y la llegada para calcular la velocidad exacta en mph.</p>
+  
+  <input type="file" id="videoInput" accept="video/*" style="margin-bottom:10px">
+  <video id="videoPlayer" controls playsinline style="display:none"></video>
+
+  <div id="videoControls" style="display:none">
+   <div style="display:flex;gap:6px;margin-bottom:6px">
+    <button class="secondary tiny" id="setStartFrame" style="flex:1">1️⃣ Marcar Salida (Mano)</button>
+    <button class="secondary tiny" id="setEndFrame" style="flex:1">2️⃣ Marcar Llegada (Guante)</button>
+   </div>
+   <div class="frame-btn-grid">
+    <button class="secondary tiny" id="prevFrame">◀ -1 Fotograma</button>
+    <button class="secondary tiny" id="nextFrame">+1 Fotograma ▶</button>
+   </div>
+   <div style="margin-top:10px;text-align:center;background:white;padding:10px;border-radius:10px;border:1px solid #d8b4fe">
+    <span class="label">Velocidad calculada</span>
+    <div style="font-size:24px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:13px">mph</span></div>
+   </div>
+  </div>
+ </div>
+
  <p class="notice">Los datos se guardan en este navegador de este dispositivo. Usa «Guardar partido» para añadirlo al histórico.</p>
 </section>
 <section id="history" class="panel">
@@ -416,7 +417,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 
 <footer>
  <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V2)</div>
- <div class="footer-sub">Herramienta avanzada con análisis instantáneo en mph.</div>
+ <div class="footer-sub">Herramienta avanzada con analizador manual por fotogramas (Beta).</div>
  <div style="margin-top:4px">Creada por F. Arnau · Uso personal</div>
 </footer>
 
@@ -449,10 +450,11 @@ document.addEventListener('visibilitychange', async () => {
 });
 requestWakeLock();
 
+// Analizador de vídeo manual fiable por fotogramas
 let startFrameTime = null;
 let endFrameTime = null;
 let lastCalculatedSpeed = null;
-let detectedFps = 30;
+const frameStep = 1 / 240; // Precisión de 240fps para cámara lenta de iPhone
 
 const videoInput = $('videoInput');
 const videoPlayer = $('videoPlayer');
@@ -465,43 +467,32 @@ videoInput.addEventListener('change', (e) => {
   videoPlayer.src = fileURL;
   videoPlayer.style.display = 'block';
   videoControls.style.display = 'block';
+  startFrameTime = null;
+  endFrameTime = null;
+  $('calculatedSpeedVal').textContent = '--';
+  $('setStartFrame').style.background = '#edf2e9';
+  $('setStartFrame').style.color = 'var(--green)';
+  $('setEndFrame').style.background = '#edf2e9';
+  $('setEndFrame').style.color = 'var(--green)';
  }
 });
-
-// Forzar la lectura en cuanto carguen los metadatos del vídeo
-videoPlayer.addEventListener('loadedmetadata', () => {
- const dur = videoPlayer.duration;
- if(dur && dur > 0){
-  startFrameTime = Number((dur * 0.25).toFixed(3));
-  endFrameTime = Number((dur * 0.65).toFixed(3));
-  detectedFps = dur > 3 ? 240 : 30;
-  computeSpeedFromFrames();
- }
-});
-
-function getFrameStep(){ return 1 / Math.max(detectedFps, 30); }
 
 $('setStartFrame').onclick = () => {
  startFrameTime = videoPlayer.currentTime;
+ $('setStartFrame').style.background = '#059669';
+ $('setStartFrame').style.color = 'white';
  computeSpeedFromFrames();
 };
 
 $('setEndFrame').onclick = () => {
  endFrameTime = videoPlayer.currentTime;
+ $('setEndFrame').style.background = '#059669';
+ $('setEndFrame').style.color = 'white';
  computeSpeedFromFrames();
 };
 
-$('prevFrame').onclick = () => { 
- videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - getFrameStep()); 
- startFrameTime = videoPlayer.currentTime;
- computeSpeedFromFrames(); 
-};
-
-$('nextFrame').onclick = () => { 
- videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + getFrameStep()); 
- endFrameTime = videoPlayer.currentTime;
- computeSpeedFromFrames(); 
-};
+$('prevFrame').onclick = () => { videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - frameStep); };
+$('nextFrame').onclick = () => { videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + frameStep); };
 
 function computeSpeedFromFrames(){
  if(startFrameTime !== null && endFrameTime !== null && endFrameTime > startFrameTime){

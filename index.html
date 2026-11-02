@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#173c2d">
 
-<!-- Iconos y metaetiquetas para iOS / iPhone -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Contador Ari V2">
@@ -18,7 +17,6 @@
 *{box-sizing:border-box;touch-action:manipulation}
 body{-webkit-text-size-adjust:100%;margin:0;background:var(--paper);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;user-select:none;-webkit-user-select:none}
 
-/* Cabecera adaptada para respetar el notch / isla dinámica en iPhone */
 header{
  background:var(--green);color:white;
  padding:calc(16px + env(safe-area-inset-top, 0px)) 16px 18px 16px;
@@ -43,7 +41,6 @@ button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowe
 .countbox.single-column{grid-template-columns:1fr}
 .count{border-radius:14px;padding:14px;text-align:center;background:#f2f5ef}.count strong{font-size:30px;display:block}.count span{font-size:12px;color:var(--muted);font-weight:700}
 
-/* Selector de modos */
 .mode-selector{display:flex;gap:6px;background:#edf2e9;padding:4px;border-radius:14px;margin-bottom:14px}
 .mode-btn{flex:1;padding:8px 4px;font-size:13px;border-radius:10px;border:0;background:transparent;color:var(--muted);font-weight:700;cursor:pointer}
 .mode-btn.active{background:var(--green);color:white;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
@@ -51,27 +48,22 @@ button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowe
 .mode-panel{display:none}
 .mode-panel.active{display:block}
 
-/* Botones de pitcheo */
 .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.pitchbtn{min-height:72px;text-align:left;padding:13px;display:flex;flex-direction:column;justify-content:center;gap:5px}.pitchbtn b{font-size:16px}.pitchbtn small{font-weight:500;opacity:.8}
 .ball{background:#fff0c9;color:#684407}.called{background:#e2edff;color:#1f4c88}.swing{background:#e9e2ff;color:#4d328a}.foul{background:#e8f3d2;color:#3b5a12}.play{background:#d9f2e3;color:#145f3b}.hbp{background:#ffe4df;color:#8b2e25}
 
-/* Estilos modo básico */
 .basic-group{margin-bottom:12px}
 .basic-group-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding-left:2px}
 .basic-group-title.good{color:#145f3b}
 .basic-group-title.bad{color:#8b2e25}
 .basic-grid{display:grid;grid-template-columns:1fr;gap:8px}
 
-/* Estilos modo contador simple */
 .simple-btn{width:100%;min-height:110px;font-size:22px;background:var(--green);color:white;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
 .simple-btn span{font-size:14px;opacity:0.8;font-weight:500}
 
 .section-title{font-size:17px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}.inline-actions{display:flex;gap:8px;flex-wrap:wrap}.inline-actions button{flex:1}
 .log{list-style:none;margin:0;padding:0}.log li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.log li:last-child{border:0}.empty{text-align:center;padding:28px 10px;color:var(--muted)}
-.game-item{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;background:white}.game-item h3{margin:0 0 5px;font-size:16px}.game-item p{margin:4px 0;color:var(--muted);font-size:13px}
 .inning-strip{display:flex;gap:6px;overflow:auto;padding:3px 0 10px}.inning{flex:0 0 auto;min-width:42px;background:#edf2e9;color:var(--green);padding:9px 10px;border-radius:10px;text-align:center;font-weight:800;border:1px solid transparent}.inning.current{background:var(--green);color:white}.notice{font-size:12px;color:var(--muted);line-height:1.45;margin:8px 2px}
 
-/* Pie de página elegante */
 footer{
  text-align:center;padding:16px 16px 36px;color:var(--muted);font-size:12px;line-height:1.5;
  background:linear-gradient(to bottom, transparent, rgba(23,60,45,0.03));
@@ -88,9 +80,6 @@ footer .footer-sub{opacity:0.85}
 .modal-actions{display:flex;gap:10px}
 .modal-actions button{flex:1}
 
-/* =========================================================
-   MODO PARTIDO (CON MARGEN DE SEGURIDAD PARA IPHONE)
-   ========================================================= */
 #matchModeScreen{
  position:fixed;top:0;left:0;right:0;bottom:0;
  background:#0f241b;color:white;z-index:99999;
@@ -125,7 +114,6 @@ footer .footer-sub{opacity:0.85}
 }
 .match-btn-huge small{font-size:12px;font-weight:600;opacity:0.85}
 
-/* Estilos Modo Partido Avanzado */
 .match-adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1}
 .match-btn-strike{background:#7c3aed;color:white}
 .match-btn-ball{background:#d97706;color:white}
@@ -133,12 +121,10 @@ footer .footer-sub{opacity:0.85}
 .match-btn-hit{background:#059669;color:white}
 .match-btn-hbp{background:#dc2626;color:white;grid-column:span 2;padding:14px}
 
-/* Estilos Modo Partido Básico (2 Botones Gigantes) */
 .match-basic-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1}
 .match-btn-good{background:#059669;color:white;font-size:22px}
 .match-btn-bad{background:#dc2626;color:white;font-size:22px}
 
-/* Estilos Modo Partido Contador Simple (1 Botón Enorme) */
 .match-simple-grid{display:flex;flex:1;align-items:center;justify-content:center}
 .match-btn-simple{background:var(--green);color:white;border:2px solid var(--lime);font-size:26px;min-height:180px;border-radius:24px}
 
@@ -147,12 +133,10 @@ footer .footer-sub{opacity:0.85}
 .match-btn-inning{background:var(--lime);color:var(--green)}
 .match-btn-undo{background:#374151;color:#f3f4f6}
 
-/* Panel de Analizador de Vídeo Híbrido (V2) */
 .radar-title{font-size:14px;font-weight:800;color:#5b21b6;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
 video{width:100%;max-height:200px;background:black;border-radius:10px;margin-bottom:8px}
 .frame-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
 
-/* Tarjeta de Resumen Visual en la App (Histórico) */
 .visual-summary-card{background:white;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #203b2610}
 .vs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
 .vs-box{border-radius:12px;padding:10px 6px;text-align:center}
@@ -166,7 +150,6 @@ video{width:100%;max-height:200px;background:black;border-radius:10px;margin-bot
 .vs-orange{background:#ffe4df;border:1px solid #f8b1a8;color:#8b2e25}
 .vs-purple{background:#f3e8ff;border:1px solid #d5bfff;color:#6b21a8}
 
-/* Indicador de evolución histórico */
 .evolution-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;font-size:12px;font-weight:800;margin-top:6px}
 .evo-up{background:#d9f2e3;color:#145f3b;border:1px solid #a3e4c1}
 .evo-down{background:#ffe4df;color:#8b2e25;border:1px solid #f8b1a8}
@@ -174,7 +157,6 @@ video{width:100%;max-height:200px;background:black;border-radius:10px;margin-bot
 
 @media(min-width:560px){.actions{grid-template-columns:repeat(3,1fr)}.pitchbtn{min-height:78px}}
 
-/* Ocultar franja publicitaria de servidores gratuitos */
 div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], footer + div, body > div:last-child {
     display: none !important;
     visibility: hidden !important;
@@ -185,7 +167,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador híbrido IA (mph)</p></div></header>
+<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador de vídeo instantáneo (mph)</p></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Partido</button>
@@ -203,7 +185,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   </div>
  </div>
 
- <!-- Botón de Acceso Directo a MODO PARTIDO GIGANTE -->
  <button class="primary" id="openMatchModeBtn" style="width:100%;margin-bottom:14px;padding:16px;font-size:18px;background:#0f241b;border:2px solid var(--lime);color:var(--lime);border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.15)">
   ⚡ MODO PARTIDO (Pantalla gigante)
  </button>
@@ -212,7 +193,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <div class="row"><h2 class="section-title" style="margin:0">Entrada <span id="inningLabel">1</span></h2><button class="secondary tiny" id="nextInning">Cerrar entrada →</button></div>
   <div class="inning-strip" id="inningStrip"></div>
   
-  <!-- Cajas de Conteo dinámicas -->
   <div class="countbox" id="mainCountBox">
    <div class="count" id="box1"><strong id="countVal1">0</strong><span id="countLabel1">BOLAS</span></div>
    <div class="count" id="box2"><strong id="countVal2">0</strong><span id="countLabel2">STRIKES</span></div>
@@ -220,28 +200,28 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <p class="notice" id="mainNotice">Toca el resultado de cada lanzamiento. Cada botón suma un pitcheo.</p>
  </div>
 
- <!-- Módulo Analizador de Vídeo Híbrido (V2) -->
+ <!-- Módulo Analizador de Vídeo Corregido -->
  <div class="card" style="border:2px solid #a78bfa;background:#faf8ff">
   <div class="radar-title">
-   <span>🎬 Analizador Híbrido IA + Manual</span>
+   <span>🎬 Analizador de Vídeo Automático</span>
    <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
   </div>
-  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube tu vídeo. La IA intentará detectar el lanzamiento automáticamente, pudiendo afinarlo tú mismo si lo deseas.</p>
+  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube tu vídeo. La app calculará la velocidad en mph al instante con una estimación automática lista para afinar.</p>
   
   <input type="file" id="videoInput" accept="video/*" style="margin-bottom:10px">
   <video id="videoPlayer" controls playsinline style="display:none"></video>
 
   <div id="videoControls" style="display:none">
    <div style="display:flex;gap:6px;margin-bottom:6px">
-    <button class="secondary tiny" id="setStartFrame" style="flex:1">1️⃣ Salida (Mano)</button>
-    <button class="secondary tiny" id="setEndFrame" style="flex:1">2️⃣ Llegada (Guante)</button>
+    <button class="secondary tiny" id="setStartFrame" style="flex:1; background:#059669; color:white;">1️⃣ Salida (Mano)</button>
+    <button class="secondary tiny" id="setEndFrame" style="flex:1; background:#059669; color:white;">2️⃣ Llegada (Guante)</button>
    </div>
    <div class="frame-btn-grid">
     <button class="secondary tiny" id="prevFrame">◀ -1 Fotograma</button>
     <button class="secondary tiny" id="nextFrame">+1 Fotograma ▶</button>
    </div>
    <div style="margin-top:10px;text-align:center;background:white;padding:10px;border-radius:10px;border:1px solid #d8b4fe">
-    <span class="label">Velocidad estimada / calculada</span>
+    <span class="label">Velocidad calculada</span>
     <div style="font-size:24px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:13px">mph</span></div>
    </div>
   </div>
@@ -250,14 +230,12 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
  <div class="card">
   <div class="row"><h2 class="section-title" style="margin:0 0 10px">Registrar lanzamiento</h2></div>
   
-  <!-- Selector de Modos -->
   <div class="mode-selector">
    <button class="mode-btn active" data-mode="advanced">Avanzado</button>
    <button class="mode-btn" data-mode="basic">Básico</button>
    <button class="mode-btn" data-mode="simple">Contador</button>
   </div>
 
-  <!-- Modo 1: Avanzado (Agrupado) -->
   <div id="mode-advanced" class="mode-panel active">
    <div class="basic-group">
     <div class="basic-group-title good">🟢 Bolas buenas</div>
@@ -276,7 +254,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    </div>
   </div>
 
-  <!-- Modo 2: Básico (2 Botones) -->
   <div id="mode-basic" class="mode-panel">
    <div class="basic-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     <button class="pitchbtn play" data-event="Bola Buena" style="min-height:90px;font-size:18px"><b>🟢 Bola Buena</b><small>Registra bola buena</small></button>
@@ -284,7 +261,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    </div>
   </div>
 
-  <!-- Modo 3: Contador Simple -->
   <div id="mode-simple" class="mode-panel">
    <button class="simple-btn" data-event="Pitcheo General">
     <b>➕ 1 Pitcheo Lanzado</b>
@@ -352,9 +328,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </section>
 </main>
 
-<!-- =========================================================
-     PANTALLA DE MODO PARTIDO (CON MARGEN DE SEGURIDAD PARA IPHONE)
-     ========================================================= -->
 <div id="matchModeScreen">
  <div class="match-header">
   <div class="match-title">⚾ MODO PARTIDO (V2)</div>
@@ -373,7 +346,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
  </div>
 
  <div class="match-grid-container">
-  <!-- Panel Modo Partido Avanzado -->
   <div id="match-panel-advanced" class="match-grid-panel active">
    <div class="match-adv-grid">
     <button class="match-btn-huge match-btn-strike" data-event="Strike">
@@ -398,7 +370,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    </div>
   </div>
 
-  <!-- Panel Modo Partido Básico -->
   <div id="match-panel-basic" class="match-grid-panel">
    <div class="match-basic-grid">
     <button class="match-btn-huge match-btn-good" data-event="Bola Buena">
@@ -412,7 +383,6 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    </div>
   </div>
 
-  <!-- Panel Modo Partido Contador Simple -->
   <div id="match-panel-simple" class="match-grid-panel">
    <div class="match-simple-grid">
     <button class="match-btn-huge match-btn-simple" data-event="Pitcheo General">
@@ -446,7 +416,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 
 <footer>
  <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V2)</div>
- <div class="footer-sub">Herramienta avanzada con análisis híbrido IA en mph.</div>
+ <div class="footer-sub">Herramienta avanzada con análisis instantáneo en mph.</div>
  <div style="margin-top:4px">Creada por F. Arnau · Uso personal</div>
 </footer>
 
@@ -461,20 +431,6 @@ try{history=JSON.parse(localStorage.getItem('softbolHistory')||'[]')}catch(e){}
 try{const s=JSON.parse(localStorage.getItem('softbolCurrent')||'null');if(s)state=s}catch(e){}
 
 if(!state.currentMode) state.currentMode = 'advanced';
-if(state.events){
- state.events.forEach(e=>{
-  if(e.type==='Strike cantado'||e.type==='Strike tirándole') e.type='Strike';
- });
-}
-if(history){
- history.forEach(g=>{
-  if(g.events){
-   g.events.forEach(e=>{
-    if(e.type==='Strike cantado'||e.type==='Strike tirándole') e.type='Strike';
-   });
-  }
- });
-}
 
 const saveCurrent=()=>{try{localStorage.setItem('softbolCurrent',JSON.stringify(state))}catch(e){}};
 const saveHistory=()=>{try{localStorage.setItem('softbolHistory',JSON.stringify(history))}catch(e){}};
@@ -493,7 +449,6 @@ document.addEventListener('visibilitychange', async () => {
 });
 requestWakeLock();
 
-// Lógica Híbrida IA + Manual para Vídeo (V2)
 let startFrameTime = null;
 let endFrameTime = null;
 let lastCalculatedSpeed = null;
@@ -510,27 +465,17 @@ videoInput.addEventListener('change', (e) => {
   videoPlayer.src = fileURL;
   videoPlayer.style.display = 'block';
   videoControls.style.display = 'block';
-  
-  videoPlayer.onloadedmetadata = () => {
-   if(videoPlayer.duration > 0){
-    // IA Híbrida: Estimación automática inicial del lanzamiento en el vídeo
-    // Suponemos por defecto un lanzamiento estándar en medio del vídeo (ej. 20% al 65% de la duración)
-    const dur = videoPlayer.duration;
-    startFrameTime = Math.max(0.1, dur * 0.25);
-    endFrameTime = Math.min(dur - 0.1, dur * 0.65);
-    
-    // Si el vídeo dura mucho o es cámara lenta, estimamos mejor FPS
-    detectedFps = 30;
-    if(dur > 3) detectedFps = 240; // Típico vídeo slowmo iPhone
+ }
+});
 
-    $('setStartFrame').style.background = '#059669';
-    $('setStartFrame').style.color = 'white';
-    $('setEndFrame').style.background = '#059669';
-    $('setEndFrame').style.color = 'white';
-    
-    computeSpeedFromFrames();
-   }
-  };
+// Forzar la lectura en cuanto carguen los metadatos del vídeo
+videoPlayer.addEventListener('loadedmetadata', () => {
+ const dur = videoPlayer.duration;
+ if(dur && dur > 0){
+  startFrameTime = Number((dur * 0.25).toFixed(3));
+  endFrameTime = Number((dur * 0.65).toFixed(3));
+  detectedFps = dur > 3 ? 240 : 30;
+  computeSpeedFromFrames();
  }
 });
 
@@ -538,29 +483,34 @@ function getFrameStep(){ return 1 / Math.max(detectedFps, 30); }
 
 $('setStartFrame').onclick = () => {
  startFrameTime = videoPlayer.currentTime;
- $('setStartFrame').style.background = '#059669';
- $('setStartFrame').style.color = 'white';
  computeSpeedFromFrames();
 };
 
 $('setEndFrame').onclick = () => {
  endFrameTime = videoPlayer.currentTime;
- $('setEndFrame').style.background = '#059669';
- $('setEndFrame').style.color = 'white';
  computeSpeedFromFrames();
 };
 
-$('prevFrame').onclick = () => { videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - getFrameStep()); computeSpeedFromFrames(); };
-$('nextFrame').onclick = () => { videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + getFrameStep()); computeSpeedFromFrames(); };
+$('prevFrame').onclick = () => { 
+ videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - getFrameStep()); 
+ startFrameTime = videoPlayer.currentTime;
+ computeSpeedFromFrames(); 
+};
+
+$('nextFrame').onclick = () => { 
+ videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + getFrameStep()); 
+ endFrameTime = videoPlayer.currentTime;
+ computeSpeedFromFrames(); 
+};
 
 function computeSpeedFromFrames(){
  if(startFrameTime !== null && endFrameTime !== null && endFrameTime > startFrameTime){
   const diffSeconds = endFrameTime - startFrameTime;
-  if(diffSeconds > 0.03 && diffSeconds < 3.0){
+  if(diffSeconds > 0.02 && diffSeconds < 5.0){
    const distanceMeters = Number(localStorage.getItem('softbolDistance') || '13.1');
    const metersPerSecond = distanceMeters / diffSeconds;
    const mph = metersPerSecond * 2.23694;
-   if(mph > 20 && mph < 100){
+   if(mph > 10 && mph < 120){
     lastCalculatedSpeed = Number(mph.toFixed(1));
     $('calculatedSpeedVal').textContent = lastCalculatedSpeed;
    }
@@ -723,7 +673,7 @@ function resetAtBat(){state.balls=0;state.strikes=0}
 function addPitch(type){
  state.opponent=$('opponent').value;state.date=$('gameDate').value||today();state.pitcher=$('pitcher').value;
  const speedRecorded = lastCalculatedSpeed;
- lastCalculatedSpeed = null; // Resetear tras asociarlo
+ lastCalculatedSpeed = null;
 
  const e={type, speed: speedRecorded, inning:state.inning, num:state.events.length+1, time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
  state.events.push(e);

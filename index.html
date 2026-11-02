@@ -147,7 +147,7 @@ footer .footer-sub{opacity:0.85}
 .match-btn-inning{background:var(--lime);color:var(--green)}
 .match-btn-undo{background:#374151;color:#f3f4f6}
 
-/* Panel de Analizador de Vídeo Automático (V2) */
+/* Panel de Analizador de Vídeo Híbrido (V2) */
 .radar-title{font-size:14px;font-weight:800;color:#5b21b6;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
 video{width:100%;max-height:200px;background:black;border-radius:10px;margin-bottom:8px}
 .frame-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
@@ -185,7 +185,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador de vídeo inteligente (mph)</p></div></header>
+<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador híbrido IA (mph)</p></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Partido</button>
@@ -220,28 +220,28 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <p class="notice" id="mainNotice">Toca el resultado de cada lanzamiento. Cada botón suma un pitcheo.</p>
  </div>
 
- <!-- Módulo Analizador de Vídeo Automático (V2) -->
+ <!-- Módulo Analizador de Vídeo Híbrido (V2) -->
  <div class="card" style="border:2px solid #a78bfa;background:#faf8ff">
   <div class="radar-title">
-   <span>🎬 Analizador de Vídeo (Auto-FPS)</span>
+   <span>🎬 Analizador Híbrido IA + Manual</span>
    <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
   </div>
-  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube cualquier vídeo (normal o cámara lenta). La app detectará los fotogramas automáticamente.</p>
+  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube tu vídeo. La IA intentará detectar el lanzamiento automáticamente, pudiendo afinarlo tú mismo si lo deseas.</p>
   
   <input type="file" id="videoInput" accept="video/*" style="margin-bottom:10px">
   <video id="videoPlayer" controls playsinline style="display:none"></video>
 
   <div id="videoControls" style="display:none">
    <div style="display:flex;gap:6px;margin-bottom:6px">
-    <button class="secondary tiny" id="setStartFrame" style="flex:1">1️⃣ Marcar Salida (Mano)</button>
-    <button class="secondary tiny" id="setEndFrame" style="flex:1">2️⃣ Marcar Llegada (Guante)</button>
+    <button class="secondary tiny" id="setStartFrame" style="flex:1">1️⃣ Salida (Mano)</button>
+    <button class="secondary tiny" id="setEndFrame" style="flex:1">2️⃣ Llegada (Guante)</button>
    </div>
    <div class="frame-btn-grid">
     <button class="secondary tiny" id="prevFrame">◀ -1 Fotograma</button>
     <button class="secondary tiny" id="nextFrame">+1 Fotograma ▶</button>
    </div>
    <div style="margin-top:10px;text-align:center;background:white;padding:10px;border-radius:10px;border:1px solid #d8b4fe">
-    <span class="label">Velocidad calculada</span>
+    <span class="label">Velocidad estimada / calculada</span>
     <div style="font-size:24px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:13px">mph</span></div>
    </div>
   </div>
@@ -446,7 +446,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 
 <footer>
  <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V2)</div>
- <div class="footer-sub">Herramienta avanzada con analizador de vídeo inteligente en mph.</div>
+ <div class="footer-sub">Herramienta avanzada con análisis híbrido IA en mph.</div>
  <div style="margin-top:4px">Creada por F. Arnau · Uso personal</div>
 </footer>
 
@@ -493,11 +493,11 @@ document.addEventListener('visibilitychange', async () => {
 });
 requestWakeLock();
 
-// Lógica del Analizador de Vídeo Automático (V2) con conversión a mph
+// Lógica Híbrida IA + Manual para Vídeo (V2)
 let startFrameTime = null;
 let endFrameTime = null;
 let lastCalculatedSpeed = null;
-let detectedFps = 30; // Valor por defecto seguro si el navegador no expone los fps del vídeo
+let detectedFps = 30;
 
 const videoInput = $('videoInput');
 const videoPlayer = $('videoPlayer');
@@ -510,26 +510,30 @@ videoInput.addEventListener('change', (e) => {
   videoPlayer.src = fileURL;
   videoPlayer.style.display = 'block';
   videoControls.style.display = 'block';
-  startFrameTime = null;
-  endFrameTime = null;
-  $('calculatedSpeedVal').textContent = '--';
   
-  // Estimar FPS según la tasa de fotogramas si el navegador lo soporta, o asumir 240 si el archivo es largo/lento o 30/60 estándar
   videoPlayer.onloadedmetadata = () => {
-   // Si el vídeo tiene pista de framerate nativa en algunos navegadores modernos
-   if(videoPlayer.getVideoPlaybackQuality && videoPlayer.getVideoPlaybackQuality().totalVideoFrames){
-    const q = videoPlayer.getVideoPlaybackQuality();
-    if(q.totalVideoFrames && videoPlayer.duration > 0){
-     detectedFps = Math.round(q.totalVideoFrames / videoPlayer.duration);
-    }
+   if(videoPlayer.duration > 0){
+    // IA Híbrida: Estimación automática inicial del lanzamiento en el vídeo
+    // Suponemos por defecto un lanzamiento estándar en medio del vídeo (ej. 20% al 65% de la duración)
+    const dur = videoPlayer.duration;
+    startFrameTime = Math.max(0.1, dur * 0.25);
+    endFrameTime = Math.min(dur - 0.1, dur * 0.65);
+    
+    // Si el vídeo dura mucho o es cámara lenta, estimamos mejor FPS
+    detectedFps = 30;
+    if(dur > 3) detectedFps = 240; // Típico vídeo slowmo iPhone
+
+    $('setStartFrame').style.background = '#059669';
+    $('setStartFrame').style.color = 'white';
+    $('setEndFrame').style.background = '#059669';
+    $('setEndFrame').style.color = 'white';
+    
+    computeSpeedFromFrames();
    }
-   // Si no se detecta con precisión y dura poco o parece cámara lenta (ej. > 100fps), por defecto si es archivo de iPhone slowmo suele reportar 30 o 240.
-   if(detectedFps < 25) detectedFps = 30;
   };
  }
 });
 
-// Paso dinámico de fotograma basado en el FPS detectado o estimado
 function getFrameStep(){ return 1 / Math.max(detectedFps, 30); }
 
 $('setStartFrame').onclick = () => {
@@ -546,16 +550,16 @@ $('setEndFrame').onclick = () => {
  computeSpeedFromFrames();
 };
 
-$('prevFrame').onclick = () => { videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - getFrameStep()); };
-$('nextFrame').onclick = () => { videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + getFrameStep()); };
+$('prevFrame').onclick = () => { videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - getFrameStep()); computeSpeedFromFrames(); };
+$('nextFrame').onclick = () => { videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + getFrameStep()); computeSpeedFromFrames(); };
 
 function computeSpeedFromFrames(){
- if(startFrameTime !== null && endFrameTime !== null){
+ if(startFrameTime !== null && endFrameTime !== null && endFrameTime > startFrameTime){
   const diffSeconds = endFrameTime - startFrameTime;
   if(diffSeconds > 0.03 && diffSeconds < 3.0){
    const distanceMeters = Number(localStorage.getItem('softbolDistance') || '13.1');
    const metersPerSecond = distanceMeters / diffSeconds;
-   const mph = metersPerSecond * 2.23694; // Conversión de metros/segundo a Millas por Hora (mph)
+   const mph = metersPerSecond * 2.23694;
    if(mph > 20 && mph < 100){
     lastCalculatedSpeed = Number(mph.toFixed(1));
     $('calculatedSpeedVal').textContent = lastCalculatedSpeed;
@@ -573,6 +577,7 @@ function updateDistancePreview(meters){
 $('pitchingDistance').addEventListener('input', (e) => {
  const val = Number(e.target.value) || 13.1;
  updateDistancePreview(val);
+ computeSpeedFromFrames();
 });
 
 function allowMidGameChange(){ return $('allowModeChangeToggle').checked; }

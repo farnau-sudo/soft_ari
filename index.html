@@ -80,6 +80,21 @@ footer .footer-sub{opacity:0.85}
 .modal-actions{display:flex;gap:10px}
 .modal-actions button{flex:1}
 
+/* Visor Gigante de Zoom */
+#zoomModal{
+ position:fixed;top:0;left:0;right:0;bottom:0;
+ background:rgba(0,0,0,0.92);z-index:99999;
+ display:none;flex-direction:column;
+ padding:calc(10px + env(safe-area-inset-top, 20px)) 12px calc(10px + env(safe-area-inset-bottom, 10px)) 12px;
+}
+#zoomModal.active{display:flex}
+.zoom-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:white}
+.zoom-title{font-size:16px;font-weight:800;color:var(--lime)}
+.btn-close-zoom{background:#374151;color:white;padding:8px 14px;border-radius:10px;font-size:14px;font-weight:700}
+.zoom-video-container{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0}
+#zoomVideo{width:100%;max-height:100%;object-fit:contain;background:black;border-radius:12px}
+.zoom-controls{background:#111c17;border:1px solid rgba(255,255,255,0.15);padding:12px;border-radius:16px;margin-top:10px}
+
 #matchModeScreen{
  position:fixed;top:0;left:0;right:0;bottom:0;
  background:#0f241b;color:white;z-index:99999;
@@ -133,18 +148,9 @@ footer .footer-sub{opacity:0.85}
 .match-btn-inning{background:var(--lime);color:var(--green)}
 .match-btn-undo{background:#374151;color:#f3f4f6}
 
-/* Estilos mejorados para el visor de vídeo grande y cómodo */
 .radar-title{font-size:14px;font-weight:800;color:#5b21b6;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
-video{
- width:100%;
- max-height:340px; /* Vídeo mucho más grande y visible en vertical */
- object-fit:contain;
- background:black;
- border-radius:14px;
- margin-bottom:10px;
-}
-.frame-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-.frame-btn-grid button{padding:14px;font-size:15px} /* Botones más grandes para los dedos */
+video{width:100%;max-height:220px;background:black;border-radius:10px;margin-bottom:8px}
+.frame-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
 
 .visual-summary-card{background:white;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #203b2610}
 .vs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
@@ -176,7 +182,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador ampliado en mph</p></div></header>
+<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador con cámara lenta (Beta)</p></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Partido</button>
@@ -265,29 +271,32 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <button class="secondary" id="newGame">Nuevo partido</button>
  </div>
 
- <!-- Módulo Analizador de Vídeo (Beta) optimizado con pantalla grande -->
+ <!-- Módulo Analizador de Vídeo (Beta) ubicado abajo del todo -->
  <div class="card" style="border:2px solid #a78bfa;background:#faf8ff;margin-top:20px">
   <div class="radar-title">
-   <span>🎬 Analizador de Vídeo Ampliado (Beta)</span>
+   <span>🎬 Analizador de Vídeo con Cámara Lenta (Beta)</span>
    <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
   </div>
-  <p class="notice" style="margin-top:0;margin-bottom:8px">Sube tu vídeo. El reproductor es ahora mucho más grande y cómodo para ver los detalles con claridad en el móvil.</p>
+  <p class="notice" style="margin-top:0;margin-bottom:8px">Graba el lanzamiento en **Cámara Lenta (Slow-Mo)** con la cámara del iPhone o súbelo desde tu fototeca para analizarlo en el visor gigante.</p>
   
-  <input type="file" id="videoInput" accept="video/*" style="margin-bottom:10px">
-  <video id="videoPlayer" controls playsinline style="display:none"></video>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+   <input type="file" id="videoInput" accept="video/*" style="display:none">
+   <button class="secondary" id="selectFileBtn" style="flex:1;background:#ede9fe;color:#6b21a8">📂 Subir de Fototeca</button>
+   <button class="primary" id="recordVideoBtn" style="flex:1;background:#7c3aed">🔴 Grabar Slow-Mo</button>
+   <input type="file" id="cameraInput" accept="video/*" capture="environment" style="display:none">
+  </div>
+  
+  <div id="videoContainerMini" style="display:none">
+   <video id="videoPlayer" controls playsinline></video>
+   <button class="primary" id="openZoomBtn" style="width:100%;margin-top:8px;background:#7c3aed;font-size:16px;padding:14px">
+    🔍 Abrir Visor Gigante (Zoom Pantalla)
+   </button>
+  </div>
 
-  <div id="videoControls" style="display:none">
-   <div style="display:flex;gap:8px;margin-bottom:8px">
-    <button class="secondary tiny" id="setStartFrame" style="flex:1;padding:14px">1️⃣ Marcar Salida (Mano)</button>
-    <button class="secondary tiny" id="setEndFrame" style="flex:1;padding:14px">2️⃣ Marcar Llegada (Guante)</button>
-   </div>
-   <div class="frame-btn-grid">
-    <button class="secondary tiny" id="prevFrame">◀ -1 Fotograma</button>
-    <button class="secondary tiny" id="nextFrame">+1 Fotograma ▶</button>
-   </div>
-   <div style="margin-top:12px;text-align:center;background:white;padding:14px;border-radius:12px;border:2px solid #d8b4fe">
+  <div id="videoControls" style="display:none; margin-top:10px">
+   <div style="text-align:center;background:white;padding:12px;border-radius:12px;border:2px solid #d8b4fe">
     <span class="label">Velocidad calculada</span>
-    <div style="font-size:30px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:14px">mph</span></div>
+    <div style="font-size:28px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:14px">mph</span></div>
    </div>
   </div>
  </div>
@@ -337,6 +346,31 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
  </div>
 </section>
 </main>
+
+<!-- Visor Gigante de Zoom -->
+<div id="zoomModal">
+ <div class="zoom-header">
+  <span class="zoom-title">🔍 Visor Ampliado (Fotogramas Slow-Mo)</span>
+  <button class="btn-close-zoom" id="closeZoomBtn">✕ Cerrar y Guardar</button>
+ </div>
+ <div class="zoom-video-container">
+  <video id="zoomVideo" controls playsinline></video>
+ </div>
+ <div class="zoom-controls">
+  <div style="display:flex;gap:8px;margin-bottom:8px">
+   <button class="secondary tiny" id="setStartFrame" style="flex:1;padding:14px;background:#059669;color:white">1️⃣ Marcar Salida (Mano)</button>
+   <button class="secondary tiny" id="setEndFrame" style="flex:1;padding:14px;background:#059669;color:white">2️⃣ Marcar Llegada (Guante)</button>
+  </div>
+  <div class="frame-btn-grid" style="grid-template-columns:1fr 1fr;gap:8px">
+   <button class="secondary tiny" id="prevFrame" style="padding:14px">◀ -1 Fotograma</button>
+   <button class="secondary tiny" id="nextFrame" style="padding:14px">+1 Fotograma ▶</button>
+  </div>
+  <div style="margin-top:10px;text-align:center;background:white;padding:10px;border-radius:10px;color:black">
+   <span class="label">Velocidad actual en visor</span>
+   <div style="font-size:26px;font-weight:900;color:#7c3aed"><span id="zoomSpeedVal">--</span> <span style="font-size:14px">mph</span></div>
+  </div>
+ </div>
+</div>
 
 <div id="matchModeScreen">
  <div class="match-header">
@@ -426,7 +460,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 
 <footer>
  <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V2)</div>
- <div class="footer-sub">Herramienta avanzada con vídeo ampliado en mph (Beta).</div>
+ <div class="footer-sub">Herramienta con cámara lenta y visor ampliado (Beta).</div>
  <div style="margin-top:4px">Creada por F. Arnau · Uso personal</div>
 </footer>
 
@@ -465,42 +499,62 @@ let lastCalculatedSpeed = null;
 const frameStep = 1 / 240;
 
 const videoInput = $('videoInput');
+const cameraInput = $('cameraInput');
 const videoPlayer = $('videoPlayer');
+const zoomVideo = $('zoomVideo');
+const videoContainerMini = $('videoContainerMini');
 const videoControls = $('videoControls');
+const zoomModal = $('zoomModal');
 
-videoInput.addEventListener('change', (e) => {
- const file = e.target.files[0];
+$('selectFileBtn').onclick = () => videoInput.click();
+$('recordVideoBtn').onclick = () => cameraInput.click();
+
+function loadVideoFile(file){
  if(file){
   const fileURL = URL.createObjectURL(file);
   videoPlayer.src = fileURL;
-  videoPlayer.style.display = 'block';
+  zoomVideo.src = fileURL;
+  videoContainerMini.style.display = 'block';
   videoControls.style.display = 'block';
   startFrameTime = null;
   endFrameTime = null;
   $('calculatedSpeedVal').textContent = '--';
-  $('setStartFrame').style.background = '#edf2e9';
-  $('setStartFrame').style.color = 'var(--green)';
-  $('setEndFrame').style.background = '#edf2e9';
-  $('setEndFrame').style.color = 'var(--green)';
+  $('zoomSpeedVal').textContent = '--';
  }
-});
+}
+
+videoInput.addEventListener('change', (e) => loadVideoFile(e.target.files[0]));
+cameraInput.addEventListener('change', (e) => loadVideoFile(e.target.files[0]));
+
+$('openZoomBtn').onclick = () => {
+ zoomModal.classList.add('active');
+ zoomVideo.currentTime = videoPlayer.currentTime;
+};
+
+$('closeZoomBtn').onclick = () => {
+ videoPlayer.currentTime = zoomVideo.currentTime;
+ zoomModal.classList.remove('active');
+};
 
 $('setStartFrame').onclick = () => {
- startFrameTime = videoPlayer.currentTime;
- $('setStartFrame').style.background = '#059669';
- $('setStartFrame').style.color = 'white';
+ startFrameTime = zoomVideo.currentTime;
  computeSpeedFromFrames();
 };
 
 $('setEndFrame').onclick = () => {
- endFrameTime = videoPlayer.currentTime;
- $('setEndFrame').style.background = '#059669';
- $('setEndFrame').style.color = 'white';
+ endFrameTime = zoomVideo.currentTime;
  computeSpeedFromFrames();
 };
 
-$('prevFrame').onclick = () => { videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - frameStep); };
-$('nextFrame').onclick = () => { videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + frameStep); };
+$('prevFrame').onclick = () => { 
+ zoomVideo.currentTime = Math.max(0, zoomVideo.currentTime - frameStep); 
+ computeSpeedFromFrames();
+};
+
+$('nextFrame').onclick = () => { 
+ zoomVideo.currentTime = Math.min(zoomVideo.duration || 0, zoomVideo.currentTime + frameStep); 
+ computeSpeedFromFrames();
+};
 
 function computeSpeedFromFrames(){
  if(startFrameTime !== null && endFrameTime !== null && endFrameTime > startFrameTime){
@@ -512,6 +566,7 @@ function computeSpeedFromFrames(){
    if(mph > 10 && mph < 120){
     lastCalculatedSpeed = Number(mph.toFixed(1));
     $('calculatedSpeedVal').textContent = lastCalculatedSpeed;
+    $('zoomSpeedVal').textContent = lastCalculatedSpeed;
    }
   }
  }
@@ -1015,7 +1070,7 @@ $('export').onclick=async()=>{
         c.strikes++; if(c.strikes>=3){ outcome = 'K'; turns[currentInning]++; counts[currentInning]={balls:0,strikes:0}; }
       }else if(e.type==='Foul'){ if(c.strikes<2)c.strikes++; }
       else if(isHit(e.type)){ outcome = 'Hit'; turns[currentInning]++; counts[currentInning]={balls:0,strikes:0}; }
-      else if(isHit(e.type) || e.type==='Golpeada'){ outcome = 'HBP'; turns[currentInning]++; counts[currentInning]={balls:0,strikes:0}; }
+      else if(e.type==='Golpeada'){ outcome = 'HBP'; turns[currentInning]++; counts[currentInning]={balls:0,strikes:0}; }
 
       return {...e, turn, pitchNumber: e.num||index+1, outcome};
     });

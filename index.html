@@ -17,7 +17,7 @@
 :root{--green:#173c2d;--green2:#245a43;--lime:#d8f36a;--paper:#f5f7f2;--ink:#18251e;--muted:#66736a;--line:#dfe5dc;--red:#b63b35;--gold:#a66b0b}
 *{box-sizing:border-box;touch-action:manipulation}
 body{-webkit-text-size-adjust:100%;margin:0;background:var(--paper);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;user-select:none;-webkit-user-select:none}
-header{background:var(--green);color:white;padding:20px 16px 18px;border-radius:0 0 24px 24px}
+header{background:var(--green);color:white;padding:calc(20px + env(safe-area-inset-top, 0px)) 16px 18px;border-radius:0 0 24px 24px}
 .wrap{max-width:720px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:#c6d8ca;font-weight:700}
 h1{font-size:24px;margin:6px 0 4px}header p{margin:0;color:#d5e3d8;font-size:14px}
 main{padding:16px;max-width:720px;margin:auto}.tabs{display:flex;gap:8px;margin-bottom:16px}
@@ -75,18 +75,19 @@ footer{text-align:center;padding:10px 16px 30px;color:var(--muted);font-size:12p
 .modal-actions button{flex:1}
 
 /* =========================================================
-   MODO PARTIDO (GIGANTE / PANTALLA COMPLETA)
+   MODO PARTIDO (CON MARGEN DE SEGURIDAD PARA IPHONE)
    ========================================================= */
 #matchModeScreen{
  position:fixed;top:0;left:0;right:0;bottom:0;
  background:#0f241b;color:white;z-index:99999;
- display:none;flex-direction:column;padding:12px;
+ display:none;flex-direction:column;
+ padding: calc(12px + env(safe-area-inset-top, 20px)) 12px calc(12px + env(safe-area-inset-bottom, 10px)) 12px;
  overflow-y:auto;
 }
 #matchModeScreen.active{display:flex}
-.match-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.15);margin-bottom:10px}
+.match-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.15);margin-bottom:10px}
 .match-title{font-size:18px;font-weight:800;color:var(--lime)}
-.btn-exit-match{background:#384d43;color:white;padding:8px 16px;font-size:14px;border-radius:10px;font-weight:700}
+.btn-exit-match{background:#384d43;color:white;padding:10px 18px;font-size:15px;border-radius:12px;font-weight:700}
 .match-dashboard{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
 .match-stat{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:8px;text-align:center}
 .match-stat span{display:block;font-size:11px;text-transform:uppercase;color:#a3c2b2;font-weight:700}
@@ -148,7 +149,7 @@ footer{text-align:center;padding:10px 16px 30px;color:var(--muted);font-size:12p
 
 @media(min-width:560px){.actions{grid-template-columns:repeat(3,1fr)}.pitchbtn{min-height:78px}}
 
-/* Ocultar franja publicitaria de servidores gratuitos como tiiny.host */
+/* Ocultar franja publicitaria de servidores gratuitos */
 div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], footer + div, body > div:last-child {
     display: none !important;
     visibility: hidden !important;
@@ -270,7 +271,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
     <input type="checkbox" id="allowModeChangeToggle" style="width:20px;height:20px;accent-color:var(--green)">
     <span>Permitir cambiar de modo a mitad de partido (con aviso)</span>
    </label>
-   <p class="notice" style="margin-top:6px">Por defecto está bloqueado para evitar alteraciones accidentales en las estadísticas del partido actual.</p>
+   <p class="notice" style="margin-top:6px">Por defecto está bloqueado para evitar alteraciones accidental en las estadísticas del partido actual.</p>
   </div>
  </div>
  <div class="card">
@@ -384,7 +385,6 @@ let history=[];
 try{history=JSON.parse(localStorage.getItem('softbolHistory')||'[]')}catch(e){}
 try{const s=JSON.parse(localStorage.getItem('softbolCurrent')||'null');if(s)state=s}catch(e){}
 
-// MIGRACIÓN DE DATOS ANTIGUOS
 if(!state.currentMode) state.currentMode = 'advanced';
 if(state.events){
  state.events.forEach(e=>{
@@ -484,14 +484,12 @@ function render(){
  const currentInningPitches = inningEvents(state.inning).length;
  const closedInningsCount = Object.keys(state.innings||{}).length;
 
- // Actualizar vista normal
  $('total').textContent = totalPitches;
  $('inningTotal').textContent = currentInningPitches;
  $('inningsDone').textContent = closedInningsCount;
  $('inningLabel').textContent = state.inning;
  $('logCount').textContent = totalPitches + ' registrados';
 
- // Calcular valores para los contadores según el modo
  let val1=0, val2=0, lbl1='BOLAS', lbl2='STRIKES', showBox2=true;
  const currentInningEvts = inningEvents(state.inning);
 
@@ -513,7 +511,6 @@ function render(){
   showBox2 = false;
  }
 
- // Renderizar contadores Vista Normal
  $('countVal1').textContent = val1;
  $('countLabel1').textContent = lbl1;
  if(showBox2){
@@ -526,7 +523,6 @@ function render(){
   $('box2').style.display = 'none';
  }
 
- // Renderizar contadores Modo Partido
  $('mTotal').textContent = totalPitches;
  $('mInning').textContent = state.inning;
  $('mInningTotal').textContent = currentInningPitches;
@@ -585,7 +581,6 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()
 document.querySelectorAll('[data-event]').forEach(b=>b.addEventListener('click',()=>addPitch(b.dataset.event)));
 ['opponent','gameDate','pitcher'].forEach(id=>$(id).addEventListener('change',()=>{state.opponent=$('opponent').value;state.date=$('gameDate').value;state.pitcher=$('pitcher').value;saveCurrent()}));
 
-// CAMBIO DE INNING DIRECTO
 function doNextInning(){
  state.innings[state.inning]={
   pitches:inningEvents(state.inning).length,
@@ -610,7 +605,6 @@ function handleUndo(){
 $('undo').onclick = handleUndo;
 $('mUndo').onclick = handleUndo;
 
-// Controles Modo Partido
 $('openMatchModeBtn').onclick = () => { render(); $('matchModeScreen').classList.add('active'); };
 $('closeMatchModeBtn').onclick = () => $('matchModeScreen').classList.remove('active');
 
@@ -938,7 +932,6 @@ $('export').onclick=async()=>{
   workbook.creator='El contador de Ari';
   workbook.created=new Date();
 
-  // Pestaña 1: Resumen de Entradas
   const summary=workbook.addWorksheet('Resumen Entradas');
   summary.columns=[
     {header:'Fecha',key:'date',width:14},
@@ -956,7 +949,6 @@ $('export').onclick=async()=>{
     inning:i.inning,pitches:i.pitches,balls:i.balls,strikes:i.strikes,fouls:i.fouls
   })));
 
-  // Pestaña 2: Lanzamientos Detallados
   const detail=workbook.addWorksheet('Lanzamientos');
   detail.columns=[
     {header:'Fecha',key:'date',width:14},
@@ -1009,7 +1001,6 @@ $('export').onclick=async()=>{
     });
   });
 
-  // Pestaña 3: Estadísticas
   const statsSheet=workbook.addWorksheet('Estadísticas');
   
   statsSheet.columns=[
@@ -1061,7 +1052,6 @@ $('export').onclick=async()=>{
     row.getCell('total').fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FFF0FDF4'}};
   });
 
-  // Pestaña 4: Resumen Visual (Adaptado al orden exacto y modo de juego)
   const visualSheet = workbook.addWorksheet('Resumen Visual');
   visualSheet.views = [{showGridLines: false}];
 
@@ -1123,7 +1113,6 @@ $('export').onclick=async()=>{
         valCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
       });
     } else {
-      // Orden exacto pedido en la imagen para modo avanzado
       const cardsRow1 = [
         {colStart: 'B', colEnd: 'C', label: 'Total pitcheos', val: stats.totalPitches, bg: 'FFE2EFDA'},
         {colStart: 'D', colEnd: 'E', label: 'Turnos bateadores', val: stats.totalTurns, bg: 'FFE2EDFF'},

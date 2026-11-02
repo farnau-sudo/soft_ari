@@ -127,23 +127,26 @@ footer{text-align:center;padding:10px 16px 30px;color:var(--muted);font-size:12p
 .match-simple-grid{display:flex;flex:1;align-items:center;justify-content:center}
 .match-btn-simple{background:var(--green);color:white;border:2px solid var(--lime);font-size:26px;min-height:180px;border-radius:24px}
 
+.match-bottom-bar{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.15)}
+.match-btn-action{padding:14px;font-size:16px;border-radius:14px;font-weight:800;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+.match-btn-inning{background:var(--lime);color:var(--green)}
+.match-btn-undo{background:#374151;color:#f3f4f6}
+
 /* Tarjeta de Resumen Visual en la App (Histórico) */
 .visual-summary-card{background:white;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #203b2610}
 .vs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
-.vs-grid.two-cols{grid-template-columns:1fr 1fr}
 .vs-box{border-radius:12px;padding:10px 6px;text-align:center}
-.vs-box span{display:block;font-size:10px;font-weight:700;margin-bottom:4px}
+.vs-box span{display:block;font-size:10px;text-transform:uppercase;font-weight:700;margin-bottom:4px}
 .vs-box strong{font-size:22px;display:block}
 .vs-info{background:#fffde6;border:2px solid #e2d26f;text-align:left;padding:10px;border-radius:12px;display:flex;flex-direction:column;justify-content:center}
 .vs-info strong{font-size:15px;margin-bottom:3px;color:var(--green)}
 .vs-info span{font-size:12px;color:var(--muted)}
-.vs-green{background:#e2efda;border:1px solid #c5e0b4;color:#276a3c}
-.vs-blue{background:#e2edff;border:1px solid #b3d1ff;color:#1f4c88}
-.vs-purple{background:#f3e8ff;border:1px solid #d5bfff;color:#6b21a8}
+.vs-green{background:#e2edff;border:1px solid #b3d1ff;color:#1f4c88}
+.vs-blue{background:#d9f2e3;border:1px solid #a3e4c1;color:#145f3b}
 .vs-orange{background:#ffe4df;border:1px solid #f8b1a8;color:#8b2e25}
+.vs-purple{background:#f3e8ff;border:1px solid #d5bfff;color:#6b21a8}
 
-@media(max-width:560px){.vs-grid{grid-template-columns:1fr 1fr}}
-@media(min-width:561px){.actions{grid-template-columns:repeat(3,1fr)}.pitchbtn{min-height:78px}}
+@media(min-width:560px){.actions{grid-template-columns:repeat(3,1fr)}.pitchbtn{min-height:78px}}
 
 /* Ocultar franja publicitaria de servidores gratuitos como tiiny.host */
 div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], footer + div, body > div:last-child {
@@ -381,6 +384,7 @@ let history=[];
 try{history=JSON.parse(localStorage.getItem('softbolHistory')||'[]')}catch(e){}
 try{const s=JSON.parse(localStorage.getItem('softbolCurrent')||'null');if(s)state=s}catch(e){}
 
+// MIGRACIÓN DE DATOS ANTIGUOS
 if(!state.currentMode) state.currentMode = 'advanced';
 if(state.events){
  state.events.forEach(e=>{
@@ -480,12 +484,14 @@ function render(){
  const currentInningPitches = inningEvents(state.inning).length;
  const closedInningsCount = Object.keys(state.innings||{}).length;
 
+ // Actualizar vista normal
  $('total').textContent = totalPitches;
  $('inningTotal').textContent = currentInningPitches;
  $('inningsDone').textContent = closedInningsCount;
  $('inningLabel').textContent = state.inning;
  $('logCount').textContent = totalPitches + ' registrados';
 
+ // Calcular valores para los contadores según el modo
  let val1=0, val2=0, lbl1='BOLAS', lbl2='STRIKES', showBox2=true;
  const currentInningEvts = inningEvents(state.inning);
 
@@ -507,6 +513,7 @@ function render(){
   showBox2 = false;
  }
 
+ // Renderizar contadores Vista Normal
  $('countVal1').textContent = val1;
  $('countLabel1').textContent = lbl1;
  if(showBox2){
@@ -519,6 +526,7 @@ function render(){
   $('box2').style.display = 'none';
  }
 
+ // Renderizar contadores Modo Partido
  $('mTotal').textContent = totalPitches;
  $('mInning').textContent = state.inning;
  $('mInningTotal').textContent = currentInningPitches;
@@ -577,6 +585,7 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()
 document.querySelectorAll('[data-event]').forEach(b=>b.addEventListener('click',()=>addPitch(b.dataset.event)));
 ['opponent','gameDate','pitcher'].forEach(id=>$(id).addEventListener('change',()=>{state.opponent=$('opponent').value;state.date=$('gameDate').value;state.pitcher=$('pitcher').value;saveCurrent()}));
 
+// CAMBIO DE INNING DIRECTO
 function doNextInning(){
  state.innings[state.inning]={
   pitches:inningEvents(state.inning).length,
@@ -601,6 +610,7 @@ function handleUndo(){
 $('undo').onclick = handleUndo;
 $('mUndo').onclick = handleUndo;
 
+// Controles Modo Partido
 $('openMatchModeBtn').onclick = () => { render(); $('matchModeScreen').classList.add('active'); };
 $('closeMatchModeBtn').onclick = () => $('matchModeScreen').classList.remove('active');
 
@@ -625,14 +635,6 @@ $('resetCount').onclick=async()=>{
  const confirmed = await showModal('Reiniciar conteo', '¿Reiniciar solo el conteo actual de bolas y strikes? No se borrarán los pitcheos.');
  if(confirmed){resetAtBat();render()}
 };
-
-function detectGameMode(events){
- if(!events || !events.length) return 'advanced';
- const types = events.map(e => e.type);
- if(types.includes('Bola Buena') || types.includes('Bola Mala')) return 'basic';
- if(types.includes('Pitcheo General')) return 'simple';
- return 'advanced';
-}
 
 function getGameComputedStats(events, inningsObj){
   const turns={},counts={};
@@ -703,9 +705,12 @@ function getGameComputedStats(events, inningsObj){
   });
   Object.values(inningMaxTurns).forEach(t=>totalTurns+=t);
 
-  const mode = detectGameMode(events);
+  const isBasic = events.some(e => e.type === 'Bola Buena' || e.type === 'Bola Mala');
+  const isSimple = events.some(e => e.type === 'Pitcheo General');
+  const goodPitches = events.filter(e => e.type === 'Bola Buena' || isStrike(e.type) || e.type === 'Foul' || isHit(e.type)).length;
+  const badPitches = events.filter(e => e.type === 'Bola Mala' || e.type === 'Bola' || e.type === 'Golpeada').length;
 
-  return {mode, totalPitches, balls, strikes, fouls, hits, hbps, ks, bbs, uniqueInnings, totalTurns};
+  return {totalPitches, balls, strikes, fouls, hits, hbps, ks, bbs, uniqueInnings, totalTurns, isBasic, isSimple, goodPitches, badPitches};
 }
 
 function gameObj(){
@@ -718,7 +723,7 @@ function gameObj(){
   date:state.date,
   pitcher:state.pitcher||'Pitcher',
   total:state.events.length,
-  mode:state.currentMode||'advanced',
+  mode:state.currentMode,
   innings:JSON.parse(JSON.stringify(state.innings)),
   events:state.events.slice(),
   inningTotals:Array.from({length:Math.max(state.inning,Object.keys(state.innings).length)},(_,i)=>({
@@ -763,42 +768,79 @@ function renderHistory(){
 
  $('historyList').innerHTML = history.map(g=>{
   const stats = getGameComputedStats(g.events||[], g.innings||{});
-  const mode = stats.mode;
+  const isSimple = g.mode === 'simple' || (g.events && g.events.every(e => e.type === 'Pitcheo General'));
+  const isBasic = g.mode === 'basic' || (g.events && g.events.some(e => e.type === 'Bola Buena' || e.type === 'Bola Mala'));
 
   let gridHtml = '';
-
-  if(mode === 'advanced'){
-   // Orden exacto pedido: 
-   // Fila 1: Total pitcheos | Turnos bateadores | Innings pitcheando | Ponchados (K)
-   // Fila 2: Strikes | Hits (incl. fouls) | Bolas + HBP | Bases por bola
+  if(isSimple){
    gridHtml = `
-    <div class="vs-grid">
-     <div class="vs-box vs-green"><span>Total pitcheos</span><strong>${stats.totalPitches}</strong></div>
-     <div class="vs-box vs-blue"><span>Turnos bateadores</span><strong>${stats.totalTurns}</strong></div>
-     <div class="vs-box vs-purple"><span>Innings pitcheando</span><strong>${stats.uniqueInnings}</strong></div>
-     <div class="vs-box vs-purple"><span>Ponchados (K)</span><strong>${stats.ks}</strong></div>
-    </div>
-    <div class="vs-grid" style="margin-top:6px">
-     <div class="vs-box vs-green"><span>Strikes</span><strong>${stats.strikes}</strong></div>
-     <div class="vs-box vs-green"><span>Hits (incl. fouls)</span><strong>${stats.hits + stats.fouls}</strong></div>
-     <div class="vs-box vs-orange"><span>Bolas + HBP</span><strong>${stats.balls + stats.hbps}</strong></div>
-     <div class="vs-box vs-blue"><span>Bases por bola</span><strong>${stats.bbs}</strong></div>
+    <div class="vs-grid" style="grid-template-columns: 1fr 1fr;">
+     <div class="vs-box vs-green">
+      <span>Total Pitcheos</span>
+      <strong>${stats.totalPitches}</strong>
+     </div>
+     <div class="vs-box vs-purple">
+      <span>Innings Pitcheando</span>
+      <strong>${stats.uniqueInnings}</strong>
+     </div>
     </div>`;
-  } else if(mode === 'basic'){
-   // Adaptación para modo Básico (Sin ponches ni hits inventados)
+  } else if(isBasic){
    gridHtml = `
-    <div class="vs-grid">
-     <div class="vs-box vs-green"><span>Total pitcheos</span><strong>${stats.totalPitches}</strong></div>
-     <div class="vs-box vs-purple"><span>Innings pitcheando</span><strong>${stats.uniqueInnings}</strong></div>
-     <div class="vs-box vs-green"><span>Bolas Buenas</span><strong>${stats.strikes}</strong></div>
-     <div class="vs-box vs-orange"><span>Bolas Malas</span><strong>${stats.balls}</strong></div>
+    <div class="vs-grid" style="grid-template-columns: repeat(4, 1fr);">
+     <div class="vs-box vs-green">
+      <span>Total Pitcheos</span>
+      <strong>${stats.totalPitches}</strong>
+     </div>
+     <div class="vs-box vs-blue">
+      <span>Innings Pitcheando</span>
+      <strong>${stats.uniqueInnings}</strong>
+     </div>
+     <div class="vs-box vs-green">
+      <span>Bolas Buenas</span>
+      <strong>${stats.goodPitches}</strong>
+     </div>
+     <div class="vs-box vs-orange">
+      <span>Bolas Malas</span>
+      <strong>${stats.badPitches}</strong>
+     </div>
     </div>`;
   } else {
-   // Adaptación para modo Contador Simple
    gridHtml = `
-    <div class="vs-grid two-cols">
-     <div class="vs-box vs-green"><span>Total pitcheos</span><strong>${stats.totalPitches}</strong></div>
-     <div class="vs-box vs-purple"><span>Innings pitcheando</span><strong>${stats.uniqueInnings}</strong></div>
+    <div class="vs-grid">
+     <div class="vs-box vs-green">
+      <span>Total pitcheos</span>
+      <strong>${stats.totalPitches}</strong>
+     </div>
+     <div class="vs-box vs-blue">
+      <span>Turnos bateadores</span>
+      <strong>${stats.totalTurns}</strong>
+     </div>
+     <div class="vs-box vs-purple">
+      <span>Innings pitcheando</span>
+      <strong>${stats.uniqueInnings}</strong>
+     </div>
+     <div class="vs-box vs-orange">
+      <span>Ponchados (K)</span>
+      <strong>${stats.ks}</strong>
+     </div>
+    </div>
+    <div class="vs-grid" style="margin-top:6px">
+     <div class="vs-box vs-green">
+      <span>Strikes</span>
+      <strong>${stats.strikes}</strong>
+     </div>
+     <div class="vs-box vs-blue">
+      <span>Hits (incl. fouls)</span>
+      <strong>${stats.hits + stats.fouls}</strong>
+     </div>
+     <div class="vs-box vs-orange">
+      <span>Bolas + HBP</span>
+      <strong>${stats.balls + stats.hbps}</strong>
+     </div>
+     <div class="vs-box vs-purple">
+      <span>Bases por bola</span>
+      <strong>${stats.bbs}</strong>
+     </div>
     </div>`;
   }
 
@@ -825,7 +867,7 @@ function renderHistory(){
   const g=history.find(x=>x.id===Number(b.dataset.detail));
   const el=$('detail-'+g.id);
   if(el.innerHTML){el.innerHTML='';return}
-  el.innerHTML=`<div style="background:#f2f5ef;padding:10px;border-radius:10px;font-size:13px"><b>Resumen por entrada</b><ul class="log" style="margin-top:6px">${(g.inningTotals||[]).map(i=>`<li><span>Entrada ${i.inning}</span><b>${i.pitches} pitcheos (Buenas/Strikes: ${i.strikes}, Malas/Bolas: ${i.balls})</b></li>`).join('')}</ul></div>`;
+  el.innerHTML=`<div style="background:#f2f5ef;padding:10px;border-radius:10px;font-size:13px"><b>Resumen por entrada</b><ul class="log" style="margin-top:6px">${(g.inningTotals||[]).map(i=>`<li><span>Entrada ${i.inning}</span><b>${i.pitches} pitcheos (B: ${i.balls}, S: ${i.strikes}, F: ${i.fouls})</b></li>`).join('')}</ul></div>`;
  });
 
  document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{
@@ -991,107 +1033,145 @@ $('export').onclick=async()=>{
   ];
 
   history.forEach(g=>{
-    const events = getEventsWithTurns(g.events||[]);
     const stats = getGameComputedStats(g.events||[], g.innings||{});
+    const isSimple = g.mode === 'simple';
+    const isBasic = g.mode === 'basic';
 
     const row = statsSheet.addRow({
       date: g.date,
       opponent: g.opponent,
       pitcher: g.pitcher,
       innings: stats.uniqueInnings,
-      turns: stats.mode === 'advanced' ? stats.totalTurns : '-',
+      turns: isSimple || isBasic ? '-' : stats.totalTurns,
       total: stats.totalPitches,
-      strikes: stats.strikes,
-      fouls: stats.mode === 'advanced' ? stats.fouls : '-',
-      hits: stats.mode === 'advanced' ? stats.hits : '-',
-      ks: stats.mode === 'advanced' ? stats.ks : '-',
-      balls: stats.balls,
-      hbps: stats.mode === 'advanced' ? stats.hbps : '-',
-      bbs: stats.mode === 'advanced' ? stats.bbs : '-',
-      pctStrikes: stats.totalPitches > 0 ? (stats.strikes / stats.totalPitches) : 0,
-      pctFouls: stats.mode === 'advanced' && stats.totalPitches > 0 ? (stats.fouls / stats.totalPitches) : 0,
-      pctHits: stats.mode === 'advanced' && stats.totalPitches > 0 ? (stats.hits / stats.totalPitches) : 0,
-      pctBallsHbp: stats.totalPitches > 0 ? ((stats.balls + (stats.hbps||0)) / stats.totalPitches) : 0
+      strikes: isSimple ? '-' : (isBasic ? stats.goodPitches : stats.strikes),
+      fouls: isSimple || isBasic ? '-' : stats.fouls,
+      hits: isSimple || isBasic ? '-' : stats.hits,
+      ks: isSimple || isBasic ? '-' : stats.ks,
+      balls: isSimple ? '-' : (isBasic ? stats.badPitches : stats.balls),
+      hbps: isSimple || isBasic ? '-' : stats.hbps,
+      bbs: isSimple || isBasic ? '-' : stats.bbs,
+      pctStrikes: isSimple || isBasic ? 0 : (stats.totalPitches > 0 ? (stats.strikes / stats.totalPitches) : 0),
+      pctFouls: isSimple || isBasic ? 0 : (stats.totalPitches > 0 ? (stats.fouls / stats.totalPitches) : 0),
+      pctHits: isSimple || isBasic ? 0 : (stats.totalPitches > 0 ? (stats.hits / stats.totalPitches) : 0),
+      pctBallsHbp: isSimple || isBasic ? 0 : (stats.totalPitches > 0 ? ((stats.balls + stats.hbps) / stats.totalPitches) : 0)
     });
 
     row.getCell('total').font = {bold:true, size:12, color:{argb:'FF173C2D'}};
     row.getCell('total').fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FFF0FDF4'}};
-
-    ['pctStrikes','pctFouls','pctHits','pctBallsHbp'].forEach(colKey=>{
-      row.getCell(colKey).fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FFEDF2E9'}};
-    });
   });
 
-  // Pestaña 4: Resumen Visual (Orden exacto a la plantilla proporcionada)
+  // Pestaña 4: Resumen Visual (Adaptado al orden exacto y modo de juego)
   const visualSheet = workbook.addWorksheet('Resumen Visual');
   visualSheet.views = [{showGridLines: false}];
 
   history.forEach((g, idx)=>{
     const stats = getGameComputedStats(g.events||[], g.innings||{});
-    const mode = stats.mode;
+    const isSimple = g.mode === 'simple';
+    const isBasic = g.mode === 'basic';
     const r = idx * 6 + 2;
 
     visualSheet.mergeCells(`B${r}:K${r}`);
     const infoCell = visualSheet.getCell(`B${r}`);
-    infoCell.value = ` Partido: ${g.opponent}    |    Fecha: ${g.date}    |    Pitcher: ${g.pitcher}`;
+    infoCell.value = ` Partido: ${g.opponent}    |    Fecha: ${g.date}    |    Pitcher: ${g.pitcher} ${isBasic ? '(Modo Básico)' : (isSimple ? '(Modo Contador)' : '')}`;
     infoCell.alignment = {vertical:'middle', horizontal:'left'};
     infoCell.font = {bold:true, size:11, color:{argb:'FF173C2D'}};
     infoCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF9E6'}};
 
-    let cardsRow1 = [], cardsRow2 = [];
+    if(isSimple){
+      const cardsSimple = [
+        {colStart: 'B', colEnd: 'E', label: 'Total pitcheos', val: stats.totalPitches, bg: 'FFE2EFDA'},
+        {colStart: 'F', colEnd: 'I', label: 'Innings pitcheando', val: stats.uniqueInnings, bg: 'FFF3E8FF'}
+      ];
+      cardsSimple.forEach(c => {
+        visualSheet.mergeCells(`${c.colStart}${r+2}:${c.colEnd}${r+2}`);
+        visualSheet.mergeCells(`${c.colStart}${r+3}:${c.colEnd}${r+3}`);
+        
+        const lblCell = visualSheet.getCell(`${c.colStart}${r+2}`);
+        lblCell.value = c.label;
+        lblCell.alignment = {vertical:'middle', horizontal:'center'};
+        lblCell.font = {size:10, bold:true, color:{argb:'FF555555'}};
+        lblCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
 
-    if(mode === 'advanced'){
-      // Orden exacto de la imagen recibida:
-      // Fila 1: Total pitcheos | Turnos bateadores | Innings pitcheando | Ponchados (K)
-      cardsRow1 = [
+        const valCell = visualSheet.getCell(`${c.colStart}${r+3}`);
+        valCell.value = c.val;
+        valCell.alignment = {vertical:'middle', horizontal:'center'};
+        valCell.font = {size:16, bold:true, color:{argb:'FF18251E'}};
+        valCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
+      });
+    } else if(isBasic){
+      const cardsBasic = [
+        {colStart: 'B', colEnd: 'C', label: 'Total pitcheos', val: stats.totalPitches, bg: 'FFE2EFDA'},
+        {colStart: 'D', colEnd: 'E', label: 'Innings pitcheando', val: stats.uniqueInnings, bg: 'FFE2EDFF'},
+        {colStart: 'F', colEnd: 'G', label: 'Bolas buenas', val: stats.goodPitches, bg: 'FFE2EFDA'},
+        {colStart: 'H', colEnd: 'I', label: 'Bolas malas', val: stats.badPitches, bg: 'FFFFE4DF'}
+      ];
+      cardsBasic.forEach(c => {
+        visualSheet.mergeCells(`${c.colStart}${r+2}:${c.colEnd}${r+2}`);
+        visualSheet.mergeCells(`${c.colStart}${r+3}:${c.colEnd}${r+3}`);
+        
+        const lblCell = visualSheet.getCell(`${c.colStart}${r+2}`);
+        lblCell.value = c.label;
+        lblCell.alignment = {vertical:'middle', horizontal:'center'};
+        lblCell.font = {size:9, bold:true, color:{argb:'FF555555'}};
+        lblCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
+
+        const valCell = visualSheet.getCell(`${c.colStart}${r+3}`);
+        valCell.value = c.val;
+        valCell.alignment = {vertical:'middle', horizontal:'center'};
+        valCell.font = {size:14, bold:true, color:{argb:'FF18251E'}};
+        valCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
+      });
+    } else {
+      // Orden exacto pedido en la imagen para modo avanzado
+      const cardsRow1 = [
         {colStart: 'B', colEnd: 'C', label: 'Total pitcheos', val: stats.totalPitches, bg: 'FFE2EFDA'},
         {colStart: 'D', colEnd: 'E', label: 'Turnos bateadores', val: stats.totalTurns, bg: 'FFE2EDFF'},
         {colStart: 'F', colEnd: 'G', label: 'Innings pitcheando', val: stats.uniqueInnings, bg: 'FFF3E8FF'},
         {colStart: 'H', colEnd: 'I', label: 'Ponchados (K)', val: stats.ks, bg: 'FFF3E8FF'}
       ];
 
-      // Fila 2: Strikes | Hits (incl. fouls) | Bolas + HBP | Bases por bola
-      cardsRow2 = [
-        {colStart: 'B', colEnd: 'C', label: 'Strikes', val: stats.strikes, bg: 'FFE2EFDA'},
-        {colStart: 'D', colEnd: 'E', label: 'Hits (incl. fouls)', val: stats.hits + stats.fouls, bg: 'FFE2EFDA'},
-        {colStart: 'F', colEnd: 'G', label: 'Bolas + HBP', val: stats.balls + stats.hbps, bg: 'FFFFE4DF'},
-        {colStart: 'H', colEnd: 'I', label: 'Bases por bola', val: stats.bbs, bg: 'FFE2EDFF'}
-      ];
-    } else if(mode === 'basic'){
-      cardsRow1 = [
-        {colStart: 'B', colEnd: 'C', label: 'Total pitcheos', val: stats.totalPitches, bg: 'FFE2EFDA'},
-        {colStart: 'D', colEnd: 'E', label: 'Innings pitcheando', val: stats.uniqueInnings, bg: 'FFF3E8FF'},
-        {colStart: 'F', colEnd: 'G', label: 'Bolas Buenas', val: stats.strikes, bg: 'FFE2EFDA'},
-        {colStart: 'H', colEnd: 'I', label: 'Bolas Malas', val: stats.balls, bg: 'FFFFE4DF'}
-      ];
-    } else {
-      cardsRow1 = [
-        {colStart: 'B', colEnd: 'C', label: 'Total pitcheos', val: stats.totalPitches, bg: 'FFE2EFDA'},
-        {colStart: 'D', colEnd: 'E', label: 'Innings pitcheando', val: stats.uniqueInnings, bg: 'FFF3E8FF'}
-      ];
-    }
-
-    [cardsRow1, cardsRow2].forEach((rowCards, rowOffset) => {
-      if(!rowCards.length) return;
-      const targetR = r + 2 + (rowOffset * 2);
-
-      rowCards.forEach(c => {
-        visualSheet.mergeCells(`${c.colStart}${targetR}:${c.colEnd}${targetR}`);
-        visualSheet.mergeCells(`${c.colStart}${targetR+1}:${c.colEnd}${targetR+1}`);
+      cardsRow1.forEach(c => {
+        visualSheet.mergeCells(`${c.colStart}${r+2}:${c.colEnd}${r+2}`);
+        visualSheet.mergeCells(`${c.colStart}${r+3}:${c.colEnd}${r+3}`);
         
-        const lblCell = visualSheet.getCell(`${c.colStart}${targetR}`);
+        const lblCell = visualSheet.getCell(`${c.colStart}${r+2}`);
         lblCell.value = c.label;
         lblCell.alignment = {vertical:'middle', horizontal:'center'};
         lblCell.font = {size:9, bold:true, color:{argb:'FF555555'}};
         lblCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
 
-        const valCell = visualSheet.getCell(`${c.colStart}${targetR+1}`);
+        const valCell = visualSheet.getCell(`${c.colStart}${r+3}`);
         valCell.value = c.val;
         valCell.alignment = {vertical:'middle', horizontal:'center'};
         valCell.font = {size:14, bold:true, color:{argb:'FF18251E'}};
         valCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
       });
-    });
+
+      const cardsRow2 = [
+        {colStart: 'B', colEnd: 'C', label: 'Strikes', val: stats.strikes, bg: 'FFE2EFDA'},
+        {colStart: 'D', colEnd: 'E', label: 'Hits (incl. fouls)', val: stats.hits + stats.fouls, bg: 'FFE2EFDA'},
+        {colStart: 'F', colEnd: 'G', label: 'Bolas + HBP', val: stats.balls + stats.hbps, bg: 'FFFFE4DF'},
+        {colStart: 'H', colEnd: 'I', label: 'Bases por bola', val: stats.bbs, bg: 'FFE2EDFF'}
+      ];
+
+      cardsRow2.forEach(c => {
+        visualSheet.mergeCells(`${c.colStart}${r+4}:${c.colEnd}${r+4}`);
+        visualSheet.mergeCells(`${c.colStart}${r+5}:${c.colEnd}${r+5}`);
+        
+        const lblCell = visualSheet.getCell(`${c.colStart}${r+4}`);
+        lblCell.value = c.label;
+        lblCell.alignment = {vertical:'middle', horizontal:'center'};
+        lblCell.font = {size:9, bold:true, color:{argb:'FF555555'}};
+        lblCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
+
+        const valCell = visualSheet.getCell(`${c.colStart}${r+5}`);
+        valCell.value = c.val;
+        valCell.alignment = {vertical:'middle', horizontal:'center'};
+        valCell.font = {size:14, bold:true, color:{argb:'FF18251E'}};
+        valCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:c.bg}};
+      });
+    }
 
     for(let rowIdx = r; rowIdx <= r+5; rowIdx++){
       for(let colIdx = 2; colIdx <= 11; colIdx++){
@@ -1161,8 +1241,3 @@ renderHistory();
 </script>
 </body>
 </html>
-```
-
-### 🎯 Resumen de ajustes implementados:
-- **Orden idéntico al de tu imagen**: Fila 1 (`Total pitcheos`, `Turnos bateadores`, `Innings pitcheando`, `Ponchados (K)`) y Fila 2 (`Strikes`, `Hits (incl. fouls)`, `Bolas + HBP`, `Bases por bola`).
-- **Filtrado inteligente por modo de conteo**: Si un partido se registró en modo *Básico* o *Contador*, el histórico y la pestaña de Resumen Visual en el Excel únicamente muestran los datos correspondientes (como *Bolas Buenas* / *Bolas Malas*) sin mostrar ponches, hits ni conceptos avanzados no registrados.

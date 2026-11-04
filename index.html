@@ -39,7 +39,14 @@ button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowe
 
 .countbox{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .countbox.single-column{grid-template-columns:1fr}
-.count{border-radius:14px;padding:14px;text-align:center;background:#f2f5ef}.count strong{font-size:30px;display:block}.count span{font-size:12px;color:var(--muted);font-weight:700}
+.count{border-radius:14px;padding:12px 6px;text-align:center;background:#f2f5ef;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.count span{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:0.5px;margin-bottom:6px;display:block}
+
+/* Puntos indicadores para bolas y strikes */
+.dots-row{display:flex;gap:6px;align-items:center;justify-content:center;min-height:26px}
+.dot{width:18px;height:18px;border-radius:50%;background:#cbd5e1;transition:all 0.2s ease}
+.dot.active-ball{background:#d97706;box-shadow:0 0 8px #f59e0b}
+.dot.active-strike{background:#7c3aed;box-shadow:0 0 8px #a78bfa}
 
 .mode-selector{display:flex;gap:6px;background:#edf2e9;padding:4px;border-radius:14px;margin-bottom:14px}
 .mode-btn{flex:1;padding:8px 4px;font-size:13px;border-radius:10px;border:0;background:transparent;color:var(--muted);font-weight:700;cursor:pointer}
@@ -72,7 +79,7 @@ footer{
 footer .footer-title{font-weight:800;color:var(--green);font-size:13px;margin-bottom:2px}
 footer .footer-sub{opacity:0.85}
 
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:999999;padding:16px}
 .modal-overlay.active{display:flex}
 .modal-card{background:white;padding:20px;border-radius:18px;max-width:360px;width:100%;box-shadow:0 10px 25px rgba(0,0,0,0.2);text-align:center}
 .modal-card h3{margin:0 0 10px;font-size:18px;color:var(--ink)}
@@ -113,9 +120,8 @@ footer .footer-sub{opacity:0.85}
 
 .match-count-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .match-count-row.single-column{grid-template-columns:1fr}
-.match-count-box{background:rgba(216,243,106,0.15);border:2px solid var(--lime);border-radius:16px;padding:10px;text-align:center}
-.match-count-box span{font-size:12px;font-weight:800;color:var(--lime);letter-spacing:1px}
-.match-count-box strong{font-size:36px;display:block;color:white;line-height:1.1}
+.match-count-box{background:rgba(216,243,106,0.12);border:1.5px solid var(--lime);border-radius:14px;padding:10px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.match-count-box span{font-size:11px;font-weight:800;color:var(--lime);letter-spacing:1px;margin-bottom:4px;display:block}
 
 .match-grid-container{flex:1;display:flex;flex-direction:column;min-height:0}
 .match-grid-panel{display:none;flex:1;flex-direction:column;gap:10px}
@@ -144,7 +150,7 @@ footer .footer-sub{opacity:0.85}
 .match-btn-simple{background:var(--green);color:white;border:2px solid var(--lime);font-size:26px;min-height:180px;border-radius:24px}
 
 .match-bottom-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.15)}
-.match-btn-action{padding:14px;font-size:16px;border-radius:14px;font-weight:800;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+.match-btn-action{padding:14px;font-size:16px;border-radius:14px;font-weight:800;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;border:0}
 .match-btn-inning{background:var(--lime);color:var(--green)}
 .match-btn-undo{background:#374151;color:#f3f4f6}
 
@@ -194,9 +200,9 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <div class="row"><div style="flex:1"><div class="label">Partido / rival</div><input id="opponent" placeholder="Ej. vs. Club visitante"></div><div style="width:45%"><div class="label">Fecha</div><input id="gameDate" type="date"></div></div>
   <div style="margin-top:12px"><div class="label">Pitcher</div><input id="pitcher" placeholder="Nombre de la pitcher"></div>
   <div class="stats">
-   <div class="stat"><strong id="total">0</strong><span>Pitcheos</span></div>
-   <div class="stat"><strong id="inningTotal">0</strong><span>Entrada actual</span></div>
-   <div class="stat"><strong id="inningsDone">0</strong><span>Entradas cerradas</span></div>
+   <div class="stat"><strong id="total">0</strong><span>Total pitcheos</span></div>
+   <div class="stat"><strong id="inningTotal">0</strong><span>Pitcheos inn</span></div>
+   <div class="stat"><strong id="inningsDone">1</strong><span>Inn</span></div>
   </div>
  </div>
 
@@ -209,8 +215,14 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <div class="inning-strip" id="inningStrip"></div>
   
   <div class="countbox" id="mainCountBox">
-   <div class="count" id="box1"><strong id="countVal1">0</strong><span id="countLabel1">BOLAS</span></div>
-   <div class="count" id="box2"><strong id="countVal2">0</strong><span id="countLabel2">STRIKES</span></div>
+   <div class="count" id="box1">
+    <span id="countLabel1">BOLAS</span>
+    <div class="dots-row" id="dotsBalls"></div>
+   </div>
+   <div class="count" id="box2">
+    <span id="countLabel2">STRIKES</span>
+    <div class="dots-row" id="dotsStrikes"></div>
+   </div>
   </div>
   <p class="notice" id="mainNotice">Toca el resultado de cada lanzamiento. Cada botón suma un pitcheo.</p>
  </div>
@@ -257,8 +269,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   </div>
 
   <div class="inline-actions" style="margin-top:14px">
-   <button class="secondary" id="undo">↶ Deshacer último</button>
-   <button class="secondary" id="minusOne">−1 pitcheo</button>
+   <button class="secondary" id="undo">↶ Deshacer</button>
    <button class="danger" id="resetCount">Reiniciar conteo</button>
   </div>
  </div>
@@ -277,13 +288,11 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    <span>🎬 Analizador de Vídeo con Cámara Lenta (Beta)</span>
    <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
   </div>
-  <p class="notice" style="margin-top:0;margin-bottom:8px">Graba el lanzamiento en **Cámara Lenta (Slow-Mo)** con la cámara del iPhone o súbelo desde tu fototeca para analizarlo en el visor gigante.</p>
+  <p class="notice" style="margin-top:0;margin-bottom:8px">Graba o selecciona el lanzamiento en **Cámara Lenta (Slow-Mo)** desde la fototeca para analizarlo en el visor gigante.</p>
   
   <div style="display:flex;gap:8px;margin-bottom:10px">
    <input type="file" id="videoInput" accept="video/*" style="display:none">
-   <button class="secondary" id="selectFileBtn" style="flex:1;background:#ede9fe;color:#6b21a8">📂 Subir de Fototeca</button>
-   <button class="primary" id="recordVideoBtn" style="flex:1;background:#7c3aed">🔴 Grabar Slow-Mo</button>
-   <input type="file" id="cameraInput" accept="video/*" capture="environment" style="display:none">
+   <button class="primary" id="recordVideoBtn" style="flex:1;background:#7c3aed">🎥 Grabar / Seleccionar Vídeo</button>
   </div>
   
   <div id="videoContainerMini" style="display:none">
@@ -379,14 +388,20 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
  </div>
 
  <div class="match-dashboard">
-  <div class="match-stat"><span>Total</span><strong id="mTotal">0</strong></div>
-  <div class="match-stat"><span>Entrada</span><strong id="mInning">1</strong></div>
-  <div class="match-stat"><span>P. Entrada</span><strong id="mInningTotal">0</strong></div>
+  <div class="match-stat"><span>Total pitcheos</span><strong id="mTotal">0</strong></div>
+  <div class="match-stat"><span>Pitcheos inn</span><strong id="mInningTotal">0</strong></div>
+  <div class="match-stat"><span>Inn</span><strong id="mInning">1</strong></div>
  </div>
 
  <div class="match-count-row" id="matchCountRow">
-  <div class="match-count-box" id="mBox1"><span id="mCountLabel1">BOLAS</span><strong id="mCountVal1">0</strong></div>
-  <div class="match-count-box" id="mBox2"><span id="mCountLabel2">STRIKES</span><strong id="mCountVal2">0</strong></div>
+  <div class="match-count-box" id="mBox1">
+   <span id="mCountLabel1">BOLAS</span>
+   <div class="dots-row" id="mDotsBalls"></div>
+  </div>
+  <div class="match-count-box" id="mBox2">
+   <span id="mCountLabel2">STRIKES</span>
+   <div class="dots-row" id="mDotsStrikes"></div>
+  </div>
  </div>
 
  <div class="match-grid-container">
@@ -499,15 +514,13 @@ let lastCalculatedSpeed = null;
 const frameStep = 1 / 240;
 
 const videoInput = $('videoInput');
-const cameraInput = $('cameraInput');
 const videoPlayer = $('videoPlayer');
 const zoomVideo = $('zoomVideo');
 const videoContainerMini = $('videoContainerMini');
 const videoControls = $('videoControls');
 const zoomModal = $('zoomModal');
 
-$('selectFileBtn').onclick = () => videoInput.click();
-$('recordVideoBtn').onclick = () => cameraInput.click();
+$('recordVideoBtn').onclick = () => videoInput.click();
 
 function loadVideoFile(file){
  if(file){
@@ -524,7 +537,6 @@ function loadVideoFile(file){
 }
 
 videoInput.addEventListener('change', (e) => loadVideoFile(e.target.files[0]));
-cameraInput.addEventListener('change', (e) => loadVideoFile(e.target.files[0]));
 
 $('openZoomBtn').onclick = () => {
  zoomModal.classList.add('active');
@@ -652,14 +664,24 @@ $('allowModeChangeToggle').addEventListener('change', () => {
 
 function inningEvents(n){return state.events.filter(e=>e.inning===n)}
 
+function renderDots(containerId, maxDots, activeCount, activeClass){
+ const container = $(containerId);
+ if(!container) return;
+ let html = '';
+ for(let i=0; i<maxDots; i++){
+  const isActive = i < activeCount;
+  html += `<div class="dot ${isActive ? activeClass : ''}"></div>`;
+ }
+ container.innerHTML = html;
+}
+
 function render(){
  const totalPitches = state.events.length;
  const currentInningPitches = inningEvents(state.inning).length;
- const closedInningsCount = Object.keys(state.innings||{}).length;
 
  $('total').textContent = totalPitches;
  $('inningTotal').textContent = currentInningPitches;
- $('inningsDone').textContent = closedInningsCount;
+ $('inningsDone').textContent = state.inning;
  $('inningLabel').textContent = state.inning;
  $('logCount').textContent = totalPitches + ' registrados';
 
@@ -677,13 +699,14 @@ function render(){
   lbl1 = 'TOTAL LANZADOS EN INNING'; val1 = currentInningPitches; showBox2 = false;
  }
 
- $('countVal1').textContent = val1;
  $('countLabel1').textContent = lbl1;
+ renderDots('dotsBalls', 4, val1, 'active-ball');
+
  if(showBox2){
   $('mainCountBox').classList.remove('single-column');
-  $('box2').style.display = 'block';
-  $('countVal2').textContent = val2;
+  $('box2').style.display = 'flex';
   $('countLabel2').textContent = lbl2;
+  renderDots('dotsStrikes', 3, val2, 'active-strike');
  } else {
   $('mainCountBox').classList.add('single-column');
   $('box2').style.display = 'none';
@@ -692,13 +715,14 @@ function render(){
  $('mTotal').textContent = totalPitches;
  $('mInning').textContent = state.inning;
  $('mInningTotal').textContent = currentInningPitches;
- $('mCountVal1').textContent = val1;
  $('mCountLabel1').textContent = lbl1;
+ renderDots('mDotsBalls', 4, val1, 'active-ball');
+
  if(showBox2){
   $('matchCountRow').classList.remove('single-column');
-  $('mBox2').style.display = 'block';
-  $('mCountVal2').textContent = val2;
+  $('mBox2').style.display = 'flex';
   $('mCountLabel2').textContent = lbl2;
+  renderDots('mDotsStrikes', 3, val2, 'active-strike');
  } else {
   $('matchCountRow').classList.add('single-column');
   $('mBox2').style.display = 'none';
@@ -759,8 +783,10 @@ function doNextInning(){
 $('nextInning').onclick = doNextInning;
 $('mNextInning').onclick = doNextInning;
 
-function handleUndo(){
- if(!state.events.length)return;
+async function handleUndo(){
+ if(!state.events.length){alert('No hay pitcheos para deshacer.');return}
+ const confirmed = await showModal('Deshacer lanzamiento', '¿Deshacer lanzamiento? Se eliminará el último lanzamiento registrado.', true);
+ if(!confirmed) return;
  state.events.pop();recount();state.saved=false;render();
 }
 
@@ -769,13 +795,6 @@ $('mUndo').onclick = handleUndo;
 
 $('openMatchModeBtn').onclick = () => { render(); $('matchModeScreen').classList.add('active'); };
 $('closeMatchModeBtn').onclick = () => { $('matchModeScreen').classList.remove('active'); };
-
-$('minusOne').onclick=async()=>{
- if(!state.events.length){alert('No hay pitcheos para restar.');return}
- const confirmed = await showModal('Restar pitcheo', '¿Restar un pitcheo? Se eliminará el último lanzamiento registrado.', true);
- if(!confirmed) return;
- state.events.pop();recount();state.saved=false;render();
-};
 
 function recount(){
  state.balls=0;state.strikes=0;

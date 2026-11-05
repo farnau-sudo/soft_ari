@@ -39,8 +39,10 @@ button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowe
 
 .countbox{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .countbox.single-column{grid-template-columns:1fr}
-.count{border-radius:14px;padding:12px 6px;text-align:center;background:#f2f5ef;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.count{border-radius:14px;padding:12px 10px;text-align:center;background:#f2f5ef;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
 .count span{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:0.5px;margin-bottom:6px;display:block}
+.count-sub-header{display:flex;justify-content:space-between;width:100%;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px;padding:0 4px}
+.count-sub-header span span{color:var(--green);font-weight:900}
 
 /* Puntos indicadores para bolas y strikes */
 .dots-row{display:flex;gap:6px;align-items:center;justify-content:center;min-height:26px}
@@ -122,6 +124,8 @@ footer .footer-sub{opacity:0.85}
 .match-count-row.single-column{grid-template-columns:1fr}
 .match-count-box{background:rgba(216,243,106,0.12);border:1.5px solid var(--lime);border-radius:14px;padding:10px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .match-count-box span{font-size:11px;font-weight:800;color:var(--lime);letter-spacing:1px;margin-bottom:4px;display:block}
+.match-count-sub-header{display:flex;justify-content:space-between;width:100%;font-size:10px;font-weight:700;color:#a3c2b2;text-transform:uppercase;margin-bottom:4px;padding:0 4px}
+.match-count-sub-header span span{color:var(--lime);font-weight:900}
 
 .match-grid-container{flex:1;display:flex;flex-direction:column;min-height:0}
 .match-grid-panel{display:none;flex:1;flex-direction:column;gap:10px}
@@ -188,7 +192,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador con cámara lenta (Beta)</p></div></header>
+<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador de vídeo con zoom</p></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Partido</button>
@@ -197,8 +201,23 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </div>
 <section id="live" class="panel active">
  <div class="card">
-  <div class="row"><div style="flex:1"><div class="label">Partido / rival</div><input id="opponent" placeholder="Ej. vs. Club visitante"></div><div style="width:45%"><div class="label">Fecha</div><input id="gameDate" type="date"></div></div>
-  <div style="margin-top:12px"><div class="label">Pitcher</div><input id="pitcher" placeholder="Nombre de la pitcher"></div>
+  <div class="row" style="margin-bottom:10px">
+   <div style="flex:1"><div class="label">Equipo Local</div><input id="homeTeam" placeholder="Ej. CB Viladecans"></div>
+   <div style="flex:1"><div class="label">Equipo Visitante</div><input id="awayTeam" placeholder="Ej. CBS Sant Boi"></div>
+  </div>
+  <div class="row" style="margin-bottom:10px">
+   <div style="flex:1"><div class="label">Pitcher</div><input id="pitcher" placeholder="Nombre de la pitcher"></div>
+   <div style="width:40%"><div class="label">Pertenece a</div>
+    <select id="pitcherTeamSide">
+     <option value="home">Local</option>
+     <option value="away">Visitante</option>
+    </select>
+   </div>
+  </div>
+  <div class="row">
+   <div style="flex:1"><div class="label">Fecha</div><input id="gameDate" type="date"></div>
+   <div style="flex:1"><div class="label">Hora de inicio</div><input id="gameTime" type="time"></div>
+  </div>
   <div class="stats">
    <div class="stat"><strong id="total">0</strong><span>Total pitcheos</span></div>
    <div class="stat"><strong id="inningTotal">0</strong><span>Pitcheos inn</span></div>
@@ -216,10 +235,12 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   
   <div class="countbox" id="mainCountBox">
    <div class="count" id="box1">
+    <div class="count-sub-header"><span>Inn: <span id="innBallsVal">0</span></span><span>Total: <span id="totBallsVal">0</span></span></div>
     <span id="countLabel1">BOLAS</span>
     <div class="dots-row" id="dotsBalls"></div>
    </div>
    <div class="count" id="box2">
+    <div class="count-sub-header"><span>Inn: <span id="innStrikesVal">0</span></span><span>Total: <span id="totStrikesVal">0</span></span></div>
     <span id="countLabel2">STRIKES</span>
     <div class="dots-row" id="dotsStrikes"></div>
    </div>
@@ -273,32 +294,24 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    <button class="danger" id="resetCount">Reiniciar conteo</button>
   </div>
  </div>
- <div class="card">
-  <div class="row"><h2 class="section-title" style="margin:0">Últimos lanzamientos</h2><span class="muted" id="logCount">0 registrados</span></div>
-  <ul class="log" id="recentLog"></ul>
- </div>
- <div class="inline-actions">
-  <button class="primary" id="saveGame">Guardar partido</button>
-  <button class="secondary" id="newGame">Nuevo partido</button>
- </div>
 
- <!-- Módulo Analizador de Vídeo (Beta) ubicado abajo del todo -->
+ <!-- Módulo Analizador de Vídeo con Zoom -->
  <div class="card" style="border:2px solid #a78bfa;background:#faf8ff;margin-top:20px">
   <div class="radar-title">
-   <span>🎬 Analizador de Vídeo con Cámara Lenta (Beta)</span>
+   <span>🎬 Analizador de Vídeo y Velocidad</span>
    <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
   </div>
-  <p class="notice" style="margin-top:0;margin-bottom:8px">Graba o selecciona el lanzamiento en **Cámara Lenta (Slow-Mo)** desde la fototeca para analizarlo en el visor gigante.</p>
+  <p class="notice" style="margin-top:0;margin-bottom:8px">Selecciona un vídeo guardado de la fototeca para calcular su velocidad exacta mediante el visor de zoom.</p>
   
   <div style="display:flex;gap:8px;margin-bottom:10px">
    <input type="file" id="videoInput" accept="video/*" style="display:none">
-   <button class="primary" id="recordVideoBtn" style="flex:1;background:#7c3aed">🎥 Grabar / Seleccionar Vídeo</button>
+   <button class="primary" id="recordVideoBtn" style="flex:1;background:#7c3aed">📁 Seleccionar Vídeo</button>
   </div>
   
   <div id="videoContainerMini" style="display:none">
    <video id="videoPlayer" controls playsinline></video>
    <button class="primary" id="openZoomBtn" style="width:100%;margin-top:8px;background:#7c3aed;font-size:16px;padding:14px">
-    🔍 Abrir Visor Gigante (Zoom Pantalla)
+    🔍 Abrir Visor y Calcular Velocidad
    </button>
   </div>
 
@@ -308,6 +321,15 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
     <div style="font-size:28px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:14px">mph</span></div>
    </div>
   </div>
+ </div>
+
+ <div class="card">
+  <div class="row"><h2 class="section-title" style="margin:0">Últimos lanzamientos</h2><span class="muted" id="logCount">0 registrados</span></div>
+  <ul class="log" id="recentLog"></ul>
+ </div>
+ <div class="inline-actions">
+  <button class="primary" id="saveGame">Guardar partido</button>
+  <button class="secondary" id="newGame">Nuevo partido</button>
  </div>
 
  <p class="notice">Los datos se guardan en este navegador de este dispositivo. Usa «Guardar partido» para añadirlo al histórico.</p>
@@ -329,6 +351,14 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 
   <button class="primary" style="width:100%;margin-bottom:16px" id="saveSettings">Guardar preferencias</button>
   
+  <div style="border-top:1px solid var(--line);padding-top:14px;margin-bottom:12px">
+   <label class="label" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+    <input type="checkbox" id="keepScreenAwakeToggle" style="width:20px;height:20px;accent-color:var(--green)">
+    <span>Evitar que la pantalla se duerma (Wake Lock)</span>
+   </label>
+   <p class="notice" style="margin-top:6px">Mantiene la pantalla encendida durante todo el partido si está activado.</p>
+  </div>
+
   <div style="border-top:1px solid var(--line);padding-top:14px">
    <label class="label" style="display:flex;align-items:center;gap:10px;cursor:pointer">
     <input type="checkbox" id="allowModeChangeToggle" style="width:20px;height:20px;accent-color:var(--green)">
@@ -356,10 +386,10 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </section>
 </main>
 
-<!-- Visor Gigante de Zoom -->
+<!-- Visor Gigante de Zoom para Vídeo -->
 <div id="zoomModal">
  <div class="zoom-header">
-  <span class="zoom-title">🔍 Visor Ampliado (Fotogramas Slow-Mo)</span>
+  <span class="zoom-title">🔍 Visor Ampliado y Cálculo de Velocidad</span>
   <button class="btn-close-zoom" id="closeZoomBtn">✕ Cerrar y Guardar</button>
  </div>
  <div class="zoom-video-container">
@@ -370,12 +400,12 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
    <button class="secondary tiny" id="setStartFrame" style="flex:1;padding:14px;background:#059669;color:white">1️⃣ Marcar Salida (Mano)</button>
    <button class="secondary tiny" id="setEndFrame" style="flex:1;padding:14px;background:#059669;color:white">2️⃣ Marcar Llegada (Guante)</button>
   </div>
-  <div class="frame-btn-grid" style="grid-template-columns:1fr 1fr;gap:8px">
+  <div class="frame-btn-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
    <button class="secondary tiny" id="prevFrame" style="padding:14px">◀ -1 Fotograma</button>
    <button class="secondary tiny" id="nextFrame" style="padding:14px">+1 Fotograma ▶</button>
   </div>
   <div style="margin-top:10px;text-align:center;background:white;padding:10px;border-radius:10px;color:black">
-   <span class="label">Velocidad actual en visor</span>
+   <span class="label">Velocidad calculada</span>
    <div style="font-size:26px;font-weight:900;color:#7c3aed"><span id="zoomSpeedVal">--</span> <span style="font-size:14px">mph</span></div>
   </div>
  </div>
@@ -383,7 +413,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 
 <div id="matchModeScreen">
  <div class="match-header">
-  <div class="match-title">⚾ MODO PARTIDO (V2)</div>
+  <div class="match-title" id="matchTitleHeader">⚾ MODO PARTIDO</div>
   <button class="btn-exit-match" id="closeMatchModeBtn">✕ Volver</button>
  </div>
 
@@ -395,10 +425,12 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 
  <div class="match-count-row" id="matchCountRow">
   <div class="match-count-box" id="mBox1">
+   <div class="match-count-sub-header"><span>Inn: <span id="mInnBallsVal">0</span></span><span>Total: <span id="mTotBallsVal">0</span></span></div>
    <span id="mCountLabel1">BOLAS</span>
    <div class="dots-row" id="mDotsBalls"></div>
   </div>
   <div class="match-count-box" id="mBox2">
+   <div class="match-count-sub-header"><span>Inn: <span id="mInnStrikesVal">0</span></span><span>Total: <span id="mTotStrikesVal">0</span></span></div>
    <span id="mCountLabel2">STRIKES</span>
    <div class="dots-row" id="mDotsStrikes"></div>
   </div>
@@ -462,6 +494,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
  </div>
 </div>
 
+<!-- Modal general de confirmación -->
 <div class="modal-overlay" id="customModal">
  <div class="modal-card">
   <h3 id="modalTitle">Confirmación</h3>
@@ -473,9 +506,31 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
  </div>
 </div>
 
+<!-- Modal específico para el resultado final al guardar -->
+<div class="modal-overlay" id="scoreModal">
+ <div class="modal-card">
+  <h3>🏁 Resultado Final del Partido</h3>
+  <p>Introduce las carreras anotadas por cada equipo:</p>
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+   <div style="flex:1">
+    <span class="label" id="scoreHomeLabel" style="display:block;margin-bottom:4px">Local</span>
+    <input id="finalHomeRuns" type="number" min="0" value="0" style="text-align:center;font-size:20px;font-weight:800">
+   </div>
+   <div style="flex:1">
+    <span class="label" id="scoreAwayLabel" style="display:block;margin-bottom:4px">Visitante</span>
+    <input id="finalAwayRuns" type="number" min="0" value="0" style="text-align:center;font-size:20px;font-weight:800">
+   </div>
+  </div>
+  <div class="modal-actions">
+   <button class="secondary" id="scoreCancel">Omitir</button>
+   <button class="primary" id="scoreConfirm">Guardar con Resultado</button>
+  </div>
+ </div>
+</div>
+
 <footer>
  <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V2)</div>
- <div class="footer-sub">Herramienta con cámara lenta y visor ampliado (Beta).</div>
+ <div class="footer-sub">Herramienta de control personal.</div>
  <div style="margin-top:4px">Creada por F. Arnau · Uso personal</div>
 </footer>
 
@@ -484,12 +539,16 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 (()=>{
 const $=id=>document.getElementById(id);
 const today=()=>new Date().toLocaleDateString('en-CA');
-let state={opponent:'',date:today(),pitcher:'',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false,currentMode:'advanced'};
+const nowTime=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+let state={homeTeam:'',awayTeam:'',pitcherTeamSide:'home',date:today(),time:nowTime(),pitcher:'',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false,currentMode:'advanced'};
 let history=[];
 try{history=JSON.parse(localStorage.getItem('softbolHistory')||'[]')}catch(e){}
 try{const s=JSON.parse(localStorage.getItem('softbolCurrent')||'null');if(s)state=s}catch(e){}
 
 if(!state.currentMode) state.currentMode = 'advanced';
+if(!state.pitcherTeamSide) state.pitcherTeamSide = 'home';
+if(!state.time) state.time = nowTime();
 
 const saveCurrent=()=>{try{localStorage.setItem('softbolCurrent',JSON.stringify(state))}catch(e){}};
 const saveHistory=()=>{try{localStorage.setItem('softbolHistory',JSON.stringify(history))}catch(e){}};
@@ -498,20 +557,36 @@ const isHit=e=>e==='Hit del bateador'||e==='En juego';
 const isStrike=e=>e==='Strike'||e==='Strike cantado'||e==='Strike tirándole';
 
 let wakeLock = null;
-async function requestWakeLock() {
- if ('wakeLock' in navigator && document.visibilityState === 'visible') {
-  try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+async function updateWakeLock() {
+ const keepAwake = $('keepScreenAwakeToggle').checked;
+ if (keepAwake) {
+  if ('wakeLock' in navigator && document.visibilityState === 'visible' && wakeLock === null) {
+   try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+  }
+ } else {
+  if (wakeLock !== null) {
+   try { await wakeLock.release(); } catch(err){}
+   wakeLock = null;
+  }
  }
 }
-document.addEventListener('visibilitychange', async () => {
- if (wakeLock !== null && document.visibilityState === 'visible') { await requestWakeLock(); }
-});
-requestWakeLock();
 
+document.addEventListener('visibilitychange', async () => {
+ if (document.visibilityState === 'visible' && $('keepScreenAwakeToggle').checked) {
+  await updateWakeLock();
+ }
+});
+
+$('keepScreenAwakeToggle').addEventListener('change', () => {
+ localStorage.setItem('softbolKeepAwake', $('keepScreenAwakeToggle').checked);
+ updateWakeLock();
+});
+
+// Analizador de Vídeo y Velocidad
 let startFrameTime = null;
 let endFrameTime = null;
 let lastCalculatedSpeed = null;
-const frameStep = 1 / 240;
+const frameStep = 1 / 60;
 
 const videoInput = $('videoInput');
 const videoPlayer = $('videoPlayer');
@@ -571,11 +646,11 @@ $('nextFrame').onclick = () => {
 function computeSpeedFromFrames(){
  if(startFrameTime !== null && endFrameTime !== null && endFrameTime > startFrameTime){
   const diffSeconds = endFrameTime - startFrameTime;
-  if(diffSeconds > 0.02 && diffSeconds < 5.0){
+  if(diffSeconds > 0.01 && diffSeconds < 10.0){
    const distanceMeters = Number(localStorage.getItem('softbolDistance') || '13.1');
    const metersPerSecond = distanceMeters / diffSeconds;
    const mph = metersPerSecond * 2.23694;
-   if(mph > 10 && mph < 120){
+   if(mph > 5 && mph < 150){
     lastCalculatedSpeed = Number(mph.toFixed(1));
     $('calculatedSpeedVal').textContent = lastCalculatedSpeed;
     $('zoomSpeedVal').textContent = lastCalculatedSpeed;
@@ -647,19 +722,78 @@ function showModal(title, message, isDanger=false) {
  });
 }
 
+function promptForScore() {
+ return new Promise(resolve => {
+  const home = $('homeTeam').value.trim() || 'Local';
+  const away = $('awayTeam').value.trim() || 'Visitante';
+  $('scoreHomeLabel').textContent = home;
+  $('scoreAwayLabel').textContent = away;
+  $('finalHomeRuns').value = '0';
+  $('finalAwayRuns').value = '0';
+  $('scoreModal').classList.add('active');
+
+  const cleanUp = () => {
+   $('scoreModal').classList.remove('active');
+   $('scoreConfirm').removeEventListener('click', onConfirm);
+   $('scoreCancel').removeEventListener('click', onCancel);
+  };
+
+  const onConfirm = () => {
+   const h = $('finalHomeRuns').value;
+   const a = $('finalAwayRuns').value;
+   cleanUp();
+   resolve({ hasScore: true, score: `${h}-${a}` });
+  };
+  const onCancel = () => {
+   cleanUp();
+   resolve({ hasScore: false, score: '' });
+  };
+
+  $('scoreConfirm').addEventListener('click', onConfirm);
+  $('scoreCancel').addEventListener('click', onCancel);
+ });
+}
+
+function updateTeamSelectOptions(){
+ const home = $('homeTeam').value.trim() || 'Local';
+ const away = $('awayTeam').value.trim() || 'Visitante';
+ const sel = $('pitcherTeamSide');
+ sel.options[0].text = `Local (${home})`;
+ sel.options[1].text = `Visitante (${away})`;
+}
+
 function syncInputs(){ 
- $('opponent').value=state.opponent||'';
+ $('homeTeam').value=state.homeTeam||'';
+ $('awayTeam').value=state.awayTeam||'';
+ $('pitcherTeamSide').value=state.pitcherTeamSide||'home';
+ updateTeamSelectOptions();
+
  $('gameDate').value=state.date||today();
+ $('gameTime').value=state.time||nowTime();
  $('pitcher').value=state.pitcher||localStorage.getItem('softbolPitcher')||'Ari'; 
  const dist = localStorage.getItem('softbolDistance') || '13.1';
  $('pitchingDistance').value = dist;
  updateDistancePreview(Number(dist));
  const savedToggle = localStorage.getItem('softbolAllowMidChange') === 'true';
  $('allowModeChangeToggle').checked = savedToggle;
+ const keepAwakeVal = localStorage.getItem('softbolKeepAwake') === 'true';
+ $('keepScreenAwakeToggle').checked = keepAwakeVal;
+ updateWakeLock();
 }
 
 $('allowModeChangeToggle').addEventListener('change', () => {
  localStorage.setItem('softbolAllowMidChange', $('allowModeChangeToggle').checked);
+});
+
+['homeTeam','awayTeam','pitcherTeamSide'].forEach(id=>{
+ $(id).addEventListener('change',()=>{
+  state.homeTeam=$('homeTeam').value.trim();
+  state.awayTeam=$('awayTeam').value.trim();
+  state.pitcherTeamSide=$('pitcherTeamSide').value;
+  updateTeamSelectOptions();
+  saveCurrent();
+ });
+ $(id).addEventListener('input', updateTeamSelectOptions);
 });
 
 function inningEvents(n){return state.events.filter(e=>e.inning===n)}
@@ -688,13 +822,31 @@ function render(){
  let val1=0, val2=0, lbl1='BOLAS', lbl2='STRIKES', showBox2=true;
  const currentInningEvts = inningEvents(state.inning);
 
+ const totalBalls = state.events.filter(e=>e.type==='Bola'||e.type==='Bola Mala').length;
+ const totalStrikes = state.events.filter(e=>isStrike(e.type)||e.type==='Bola Buena'||e.type==='Foul').length;
+
  if(state.currentMode === 'advanced'){
   lbl1 = 'BOLAS'; lbl2 = 'STRIKES'; val1 = state.balls; val2 = state.strikes; showBox2 = true;
+  $('innBallsVal').textContent = state.balls;
+  $('totBallsVal').textContent = totalBalls;
+  $('innStrikesVal').textContent = state.strikes;
+  $('totStrikesVal').textContent = totalStrikes;
+
+  $('mInnBallsVal').textContent = state.balls;
+  $('mTotBallsVal').textContent = totalBalls;
+  $('mInnStrikesVal').textContent = state.strikes;
+  $('mTotStrikesVal').textContent = totalStrikes;
  } else if(state.currentMode === 'basic'){
   lbl1 = 'BUENAS'; lbl2 = 'MALAS';
   val1 = currentInningEvts.filter(e => e.type === 'Bola Buena' || isStrike(e.type) || e.type === 'Foul' || isHit(e.type)).length;
   val2 = currentInningEvts.filter(e => e.type === 'Bola Mala' || e.type === 'Bola' || e.type === 'Golpeada').length;
   showBox2 = true;
+  const totGood = state.events.filter(e => e.type === 'Bola Buena' || isStrike(e.type) || e.type === 'Foul' || e.type === 'Hit del bateador').length;
+  const totBad = state.events.filter(e => e.type === 'Bola Mala' || e.type === 'Bola' || e.type === 'Golpeada').length;
+  $('innBallsVal').textContent = val1; $('totBallsVal').textContent = totGood;
+  $('innStrikesVal').textContent = val2; $('totStrikesVal').textContent = totBad;
+  $('mInnBallsVal').textContent = val1; $('mTotBallsVal').textContent = totGood;
+  $('mInnStrikesVal').textContent = val2; $('mTotStrikesVal').textContent = totBad;
  } else if(state.currentMode === 'simple'){
   lbl1 = 'TOTAL LANZADOS EN INNING'; val1 = currentInningPitches; showBox2 = false;
  }
@@ -717,6 +869,9 @@ function render(){
  $('mInningTotal').textContent = currentInningPitches;
  $('mCountLabel1').textContent = lbl1;
  renderDots('mDotsBalls', 4, val1, 'active-ball');
+
+ const activeTeamName = state.pitcherTeamSide === 'home' ? ($('homeTeam').value.trim()||'Local') : ($('awayTeam').value.trim()||'Visitante');
+ $('matchTitleHeader').textContent = `⚾ MODO PARTIDO (${activeTeamName})`;
 
  if(showBox2){
   $('matchCountRow').classList.remove('single-column');
@@ -749,7 +904,13 @@ function render(){
 function resetAtBat(){state.balls=0;state.strikes=0}
 
 function addPitch(type){
- state.opponent=$('opponent').value;state.date=$('gameDate').value||today();state.pitcher=$('pitcher').value;
+ state.homeTeam=$('homeTeam').value.trim();
+ state.awayTeam=$('awayTeam').value.trim();
+ state.pitcherTeamSide=$('pitcherTeamSide').value;
+ state.date=$('gameDate').value||today();
+ state.time=$('gameTime').value||nowTime();
+ state.pitcher=$('pitcher').value;
+ 
  const speedRecorded = lastCalculatedSpeed;
  lastCalculatedSpeed = null;
 
@@ -768,7 +929,7 @@ function addPitch(type){
 
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));if(b.dataset.tab==='history')renderHistory()}));
 document.querySelectorAll('[data-event]').forEach(b=>b.addEventListener('click',()=>addPitch(b.dataset.event)));
-['opponent','gameDate','pitcher'].forEach(id=>$(id).addEventListener('change',()=>{state.opponent=$('opponent').value;state.date=$('gameDate').value;state.pitcher=$('pitcher').value;saveCurrent()}));
+['gameDate','gameTime','pitcher'].forEach(id=>$(id).addEventListener('change',()=>{state.date=$('gameDate').value;state.time=$('gameTime').value;state.pitcher=$('pitcher').value;saveCurrent()}));
 
 function doNextInning(){
  state.innings[state.inning]={
@@ -862,14 +1023,29 @@ function getGameComputedStats(events, inningsObj){
   return {totalPitches, balls, strikes, fouls, hits, hbps, ks, bbs, uniqueInnings, totalTurns, isBasic, isSimple, goodPitches, badPitches, maxSpeed, avgSpeed};
 }
 
-function gameObj(){
- state.opponent=$('opponent').value.trim();
+async function gameObjWithScore(){
+ state.homeTeam=$('homeTeam').value.trim();
+ state.awayTeam=$('awayTeam').value.trim();
+ state.pitcherTeamSide=$('pitcherTeamSide').value;
  state.date=$('gameDate').value||today();
+ state.time=$('gameTime').value||nowTime();
  state.pitcher=$('pitcher').value.trim();
+ 
+ const homeStr = state.homeTeam || 'Local';
+ const awayStr = state.awayTeam || 'Visitante';
+ const pTeamStr = state.pitcherTeamSide === 'home' ? homeStr : awayStr;
+
+ const res = await promptForScore();
+
  return {
   id:Date.now(),
-  opponent:state.opponent||'Partido sin rival',
+  homeTeam: homeStr,
+  awayTeam: awayStr,
+  pitcherTeamSide: state.pitcherTeamSide,
+  opponent:`${homeStr} vs. ${awayStr} (${pTeamStr})`,
+  finalScore: res.hasScore ? res.score : '',
   date:state.date,
+  time:state.time,
   pitcher:state.pitcher||'Pitcher',
   total:state.events.length,
   mode:state.currentMode,
@@ -885,27 +1061,27 @@ function gameObj(){
  };
 }
 
-function performSaveGame(){
- const g=gameObj();
+async function performSaveGame(){
+ const g=await gameObjWithScore();
  const idx=history.findIndex(x=>x.id===g.id);
  if(idx>=0)history[idx]=g;else history.unshift(g);
  saveHistory();state.saved=true;saveCurrent();
-}
-
-$('saveGame').onclick=()=>{
- if(!state.events.length){alert('Todavía no hay pitcheos para guardar.');return}
- performSaveGame();
  alert('Partido guardado en el histórico de este dispositivo.');
  renderHistory();
+}
+
+$('saveGame').onclick=async()=>{
+ if(!state.events.length){alert('Todavía no hay pitcheos para guardar.');return}
+ await performSaveGame();
 };
 
 $('newGame').onclick=async()=>{
  if(state.events.length){
   const confirmed = await showModal('Nuevo partido', 'Se guardará automáticamente el partido actual en el histórico antes de iniciar uno nuevo. ¿Continuar?');
   if(!confirmed) return;
-  performSaveGame();
+  await performSaveGame();
  }
- state={opponent:'',date:today(),pitcher:localStorage.getItem('softbolPitcher')||'Ari',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false,currentMode:state.currentMode||'advanced'};
+ state={homeTeam:'',awayTeam:'',pitcherTeamSide:'home',date:today(),time:nowTime(),pitcher:localStorage.getItem('softbolPitcher')||'Ari',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false,currentMode:state.currentMode||'advanced'};
  syncInputs();render();
 };
 
@@ -952,6 +1128,7 @@ function renderHistory(){
   }
 
   let speedBadge = stats.maxSpeed > 0 ? `<div style="margin-top:4px;font-size:12px;font-weight:700;color:#6b21a8">⚡ Velocidad Máx: ${stats.maxSpeed} mph (Med: ${stats.avgSpeed} mph)</div>` : '';
+  let scoreBadge = g.finalScore ? `<div style="margin-top:4px;font-size:13px;font-weight:800;color:var(--green)">🏆 Resultado final: ${esc(g.finalScore)}</div>` : '';
 
   let gridHtml = '';
   if(isSimple){
@@ -962,12 +1139,15 @@ function renderHistory(){
    gridHtml = `<div class="vs-grid"><div class="vs-box vs-green"><span>Total pitcheos</span><strong>${stats.totalPitches}</strong></div><div class="vs-box vs-blue"><span>Turnos bateadores</span><strong>${stats.totalTurns}</strong></div><div class="vs-box vs-purple"><span>Innings pitcheando</span><strong>${stats.uniqueInnings}</strong></div><div class="vs-box vs-orange"><span>Ponchados (K)</span><strong>${stats.ks}</strong></div></div><div class="vs-grid" style="margin-top:6px"><div class="vs-box vs-green"><span>Strikes</span><strong>${stats.strikes}</strong></div><div class="vs-box vs-blue"><span>Hits (incl. fouls)</span><strong>${stats.hits + stats.fouls}</strong></div><div class="vs-box vs-orange"><span>Bolas + HBP</span><strong>${stats.balls + stats.hbps}</strong></div><div class="vs-box vs-purple"><span>Bases por bola</span><strong>${stats.bbs}</strong></div></div>`;
   }
 
+  const matchTitleDisplay = g.homeTeam ? `${esc(g.homeTeam)} vs. ${esc(g.awayTeam)}` : esc(g.opponent);
+
   return `
    <article class="visual-summary-card">
     <div class="row">
      <div class="vs-info" style="flex:1">
-      <strong>⚾ ${esc(g.opponent)}</strong>
-      <span>📅 Fecha: ${esc(g.date)} &nbsp;·&nbsp; 👤 Pitcher: ${esc(g.pitcher)}</span>
+      <strong>⚾ ${matchTitleDisplay}</strong>
+      <span>📅 Fecha: ${esc(g.date)} (${esc(g.time||'--:--')}) &nbsp;·&nbsp; 👤 Pitcher: ${esc(g.pitcher)}</span>
+      ${scoreBadge}
       ${evoHtml}
       ${speedBadge}
      </div>
@@ -989,10 +1169,12 @@ function renderHistory(){
   const stats = getGameComputedStats(g.events||[], g.innings||{});
   const isSimple = g.mode === 'simple';
   const isBasic = g.mode === 'basic';
+  const matchTitleDisplay = g.homeTeam ? `${g.homeTeam} vs. ${g.awayTeam}` : g.opponent;
 
   let text = `🥎 *Resumen de Partido - Softball* 🥎\n`;
-  text += `🆚 Rival: ${g.opponent}\n`;
-  text += `📅 Fecha: ${g.date}\n`;
+  text += `🆚 Partido: ${matchTitleDisplay}\n`;
+  text += `📅 Fecha: ${g.date} (${g.time||'--:--'})\n`;
+  if(g.finalScore) text += `🏆 Resultado: ${g.finalScore}\n`;
   text += `👤 Pitcher: ${g.pitcher}\n`;
   if(stats.maxSpeed > 0) text += `⚡ Velocidad Máx: ${stats.maxSpeed} mph\n`;
   text += `\n`;
@@ -1029,6 +1211,7 @@ $('exportBackupBtn').onclick = () => {
   pitcher: localStorage.getItem('softbolPitcher') || '',
   distance: localStorage.getItem('softbolDistance') || '13.1',
   allowMidChange: localStorage.getItem('softbolAllowMidChange') || 'false',
+  keepAwake: localStorage.getItem('softbolKeepAwake') || 'false',
   history: history,
   current: state
  };
@@ -1058,7 +1241,8 @@ $('importFileInput').onchange = (event) => {
       if(backup.pitcher) localStorage.setItem('softbolPitcher', backup.pitcher);
       if(backup.distance) localStorage.setItem('softbolDistance', backup.distance);
       if(backup.allowMidChange) localStorage.setItem('softbolAllowMidChange', backup.allowMidChange);
-      saveHistory(); saveCurrent(); syncInputs();
+      if(backup.keepAwake) { localStorage.setItem('softbolKeepAwake', backup.keepAwake); $('keepScreenAwakeToggle').checked = (backup.keepAwake === 'true'); }
+      saveHistory(); saveCurrent(); syncInputs(); updateWakeLock();
       if(state.currentMode) setModeDirect(state.currentMode); else render();
       renderHistory();
       alert('¡Copia de seguridad restaurada con éxito!');
@@ -1117,18 +1301,18 @@ $('export').onclick=async()=>{
 
   const summary=workbook.addWorksheet('Resumen Entradas');
   summary.columns=[
-    {header:'Fecha',key:'date',width:14}, {header:'Rival',key:'opponent',width:25}, {header:'Pitcher',key:'pitcher',width:20},
-    {header:'Pitcheos totales',key:'total',width:18}, {header:'Entrada',key:'inning',width:12}, {header:'Pitcheos entrada',key:'pitches',width:19},
+    {header:'Fecha',key:'date',width:14}, {header:'Hora',key:'time',width:10}, {header:'Resultado',key:'finalScore',width:14}, {header:'Partido / Rival',key:'opponent',width:25}, {header:'Pitcher',key:'pitcher',width:20},
+    {header:'Pitcheos totales',key:'total',width:18}, {header:'Entrada',key:'inning',width:12}, {header:'Pitcheos inn',key:'pitches',width:19},
     {header:'Bolas / Malas',key:'balls',width:14}, {header:'Strikes / Buenas',key:'strikes',width:15}, {header:'Fouls',key:'fouls',width:10}
   ];
   history.forEach(g=>(g.inningTotals||[]).forEach(i=>summary.addRow({
-    date:g.date,opponent:g.opponent,pitcher:g.pitcher,total:g.total,
+    date:g.date,time:g.time||'',finalScore:g.finalScore||'',opponent:g.opponent,pitcher:g.pitcher,total:g.total,
     inning:i.inning,pitches:i.pitches,balls:i.balls,strikes:i.strikes,fouls:i.fouls
   })));
 
   const detail=workbook.addWorksheet('Lanzamientos');
   detail.columns=[
-    {header:'Fecha',key:'date',width:14}, {header:'Rival',key:'opponent',width:24}, {header:'Pitcher',key:'pitcher',width:19},
+    {header:'Fecha',key:'date',width:14}, {header:'Partido / Rival',key:'opponent',width:24}, {header:'Pitcher',key:'pitcher',width:19},
     {header:'Entrada (inning)',key:'inning',width:17}, {header:'Turno al bate',key:'turn',width:16}, {header:'N.º de pitcheo',key:'pitchNumber',width:17},
     {header:'Velocidad (mph)',key:'speed',width:18}, {header:'Hora',key:'time',width:12}, {header:'Resultado del lanzamiento',key:'type',width:28}
   ];
@@ -1170,7 +1354,7 @@ $('export').onclick=async()=>{
 
   const statsSheet=workbook.addWorksheet('Estadísticas');
   statsSheet.columns=[
-    {header:'Fecha',key:'date',width:14}, {header:'Rival',key:'opponent',width:25}, {header:'Pitcher',key:'pitcher',width:18},
+    {header:'Fecha',key:'date',width:14}, {header:'Hora',key:'time',width:10}, {header:'Resultado',key:'finalScore',width:14}, {header:'Partido / Rival',key:'opponent',width:25}, {header:'Pitcher',key:'pitcher',width:18},
     {header:'Velocidad Máx (mph)',key:'maxSpeed',width:20}, {header:'Velocidad Media (mph)',key:'avgSpeed',width:22},
     {header:'Entradas Jugadas',key:'innings',width:16}, {header:'Turnos (Bateadores)',key:'turns',width:20}, {header:'Total Pitcheos',key:'total',width:16},
     {header:'Strikes / Buenas',key:'strikes',width:16}, {header:'Fouls',key:'fouls',width:12}, {header:'Pelota en juego (Hits)',key:'hits',width:22},
@@ -1194,7 +1378,7 @@ $('export').onclick=async()=>{
     }
 
     statsSheet.addRow({
-      date: g.date, opponent: g.opponent, pitcher: g.pitcher,
+      date: g.date, time: g.time||'-', finalScore: g.finalScore||'-', opponent: g.opponent, pitcher: g.pitcher,
       maxSpeed: stats.maxSpeed > 0 ? stats.maxSpeed + ' mph' : '-',
       avgSpeed: stats.avgSpeed > 0 ? stats.avgSpeed + ' mph' : '-',
       innings: stats.uniqueInnings, turns: isSimple || isBasic ? '-' : stats.totalTurns,
@@ -1243,7 +1427,6 @@ $('saveSettings').onclick=()=>{
  localStorage.setItem('softbolPitcher',$('defaultPitcher').value.trim());
  const distVal = $('pitchingDistance').value || '13.1';
  localStorage.setItem('softbolDistance', distVal);
- updateDistancePreview(Number(distVal));
  $('pitcher').value=$('defaultPitcher').value.trim();
  state.pitcher=$('pitcher').value;
  saveCurrent();

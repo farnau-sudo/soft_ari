@@ -89,20 +89,80 @@ footer .footer-sub{opacity:0.85}
 .modal-actions{display:flex;gap:10px}
 .modal-actions button{flex:1}
 
-/* Visor Gigante de Zoom */
+/* Visor Gigante de Zoom con Pan Libre */
 #zoomModal{
  position:fixed;top:0;left:0;right:0;bottom:0;
- background:rgba(0,0,0,0.92);z-index:99999;
+ background:#070d0a;z-index:99999;
  display:none;flex-direction:column;
- padding:calc(10px + env(safe-area-inset-top, 20px)) 12px calc(10px + env(safe-area-inset-bottom, 10px)) 12px;
+ padding:calc(8px + env(safe-area-inset-top, 14px)) 10px calc(8px + env(safe-area-inset-bottom, 10px)) 10px;
 }
 #zoomModal.active{display:flex}
-.zoom-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:white}
-.zoom-title{font-size:16px;font-weight:800;color:var(--lime)}
-.btn-close-zoom{background:#374151;color:white;padding:8px 14px;border-radius:10px;font-size:14px;font-weight:700}
-.zoom-video-container{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0}
-#zoomVideo{width:100%;max-height:100%;object-fit:contain;background:black;border-radius:12px}
-.zoom-controls{background:#111c17;border:1px solid rgba(255,255,255,0.15);padding:12px;border-radius:16px;margin-top:10px}
+.zoom-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;color:white;gap:8px}
+.zoom-title{font-size:15px;font-weight:800;color:var(--lime)}
+.btn-close-zoom{background:#374151;color:white;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:700}
+
+.zoom-toolbar{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.zoom-pill-group{display:flex;align-items:center;gap:4px;background:#16241d;padding:4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12)}
+.zoom-tool-btn{background:#23382e;color:white;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:800}
+.zoom-tool-btn.active{background:var(--lime);color:var(--green)}
+.zoom-level-badge{color:var(--lime);font-size:12px;font-weight:800;min-width:42px;text-align:center}
+
+.zoom-video-viewport{
+ flex:1;position:relative;min-height:0;overflow:hidden;
+ background:#000;border-radius:12px;border:1px solid rgba(255,255,255,0.18);
+ display:flex;align-items:center;justify-content:center;
+ touch-action:none;
+}
+.zoom-stage{
+ width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+ transform-origin:0 0;will-change:transform;touch-action:none;
+}
+#zoomVideo{width:100%;height:100%;object-fit:contain;background:black;pointer-events:none;display:block}
+.zoom-crosshair{
+ position:absolute;top:50%;left:50%;width:26px;height:26px;transform:translate(-50%,-50%);
+ pointer-events:none;opacity:0.45;
+}
+.zoom-crosshair::before,.zoom-crosshair::after{content:'';position:absolute;background:var(--lime)}
+.zoom-crosshair::before{top:12px;left:0;right:0;height:2px}
+.zoom-crosshair::after{left:12px;top:0;bottom:0;width:2px}
+.zoom-gesture-hint{
+ position:absolute;bottom:8px;left:8px;right:8px;text-align:center;
+ font-size:11px;color:rgba(255,255,255,0.78);background:rgba(0,0,0,0.55);
+ padding:4px 8px;border-radius:8px;pointer-events:none;
+}
+
+.zoom-scrubber-bar{
+ display:flex;align-items:center;gap:8px;margin-top:8px;
+ background:#111c17;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+}
+.zoom-scrubber-bar input[type="range"]{
+ flex:1;padding:0;height:24px;background:transparent;border:0;accent-color:var(--lime);
+}
+.zoom-time-readout{color:#d1fae5;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}
+
+.zoom-controls{background:#111c17;border:1px solid rgba(255,255,255,0.15);padding:10px;border-radius:14px;margin-top:8px}
+
+/* Badges de fiabilidad de vídeo */
+.reliability-badge{
+ display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:9px;
+ font-size:12px;font-weight:800;margin-bottom:6px;
+}
+.rel-ok{background:#d9f2e3;color:#145f3b;border:1px solid #86efac}
+.rel-warn{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+.rel-bad{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+
+.fps-chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;margin-bottom:12px}
+.fps-chip{
+ flex:1 1 auto;min-width:72px;padding:10px 8px;border-radius:11px;
+ border:1px solid var(--line);background:#f5f7f2;color:var(--ink);
+ font-size:13px;font-weight:750;text-align:center;
+}
+.fps-chip.active{background:var(--green);color:white;border-color:var(--green)}
+
+.tech-summary-box{
+ background:#f3e8ff;border:1px solid #d8b4fe;border-radius:11px;
+ padding:9px 11px;font-size:12px;color:#4c1d95;margin-bottom:10px;line-height:1.45;
+}
 
 #matchModeScreen{
  position:fixed;top:0;left:0;right:0;bottom:0;
@@ -214,10 +274,14 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
     </select>
    </div>
   </div>
-  <div class="row">
+  <div class="row" style="margin-bottom:10px">
    <div style="flex:1"><div class="label">Fecha</div><input id="gameDate" type="date"></div>
    <div style="flex:1"><div class="label">Hora de inicio</div><input id="gameTime" type="time"></div>
   </div>
+  <div class="row" style="margin-bottom:10px">
+   <div style="flex:1"><div class="label">Campo de juego</div><input id="gameField" placeholder="Ej. Campo municipal"></div>
+  </div>
+  <div style="margin-bottom:10px"><div class="label">Torneo / Competición</div><input id="tournamentName" placeholder="Ej. Liga catalana, Copa..." ></div>
   <div class="stats">
    <div class="stat"><strong id="total">0</strong><span>Total pitcheos</span></div>
    <div class="stat"><strong id="inningTotal">0</strong><span>Pitcheos inn</span></div>
@@ -295,30 +359,33 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   </div>
  </div>
 
- <!-- Módulo Analizador de Vídeo con Zoom -->
+ <!-- Módulo Analizador de Vídeo con Zoom y Verificación FPS -->
  <div class="card" style="border:2px solid #a78bfa;background:#faf8ff;margin-top:20px">
   <div class="radar-title">
    <span>🎬 Analizador de Vídeo y Velocidad</span>
    <span id="speedDistLabel" style="font-size:11px;color:#6b21a8">13.1m (43.0 ft)</span>
   </div>
-  <p class="notice" style="margin-top:0;margin-bottom:8px">Selecciona un vídeo guardado de la fototeca para calcular su velocidad exacta mediante el visor de zoom.</p>
+  <p class="notice" style="margin-top:0;margin-bottom:8px">Importa el vídeo original desde Fotos (sin pasar por WhatsApp) para leer sus fotogramas reales y usar el visor con zoom y desplazamiento.</p>
   
   <div style="display:flex;gap:8px;margin-bottom:10px">
    <input type="file" id="videoInput" accept="video/*" style="display:none">
-   <button class="primary" id="recordVideoBtn" style="flex:1;background:#7c3aed">📁 Seleccionar Vídeo</button>
+   <button class="primary" id="recordVideoBtn" style="flex:1;background:#7c3aed">📁 Seleccionar Vídeo Original</button>
   </div>
   
   <div id="videoContainerMini" style="display:none">
+   <div id="videoTechSummary" class="tech-summary-box">Analizando metadatos del vídeo...</div>
    <video id="videoPlayer" controls playsinline></video>
    <button class="primary" id="openZoomBtn" style="width:100%;margin-top:8px;background:#7c3aed;font-size:16px;padding:14px">
-    🔍 Abrir Visor y Calcular Velocidad
+    🔍 Abrir Visor con Zoom + Pan y Calcular
    </button>
   </div>
 
   <div id="videoControls" style="display:none; margin-top:10px">
    <div style="text-align:center;background:white;padding:12px;border-radius:12px;border:2px solid #d8b4fe">
-    <span class="label">Velocidad calculada</span>
+    <div id="mainReliabilityBadge" class="reliability-badge rel-warn">⚠️ Pendiente de marcar fotogramas</div>
+    <div><span class="label">Velocidad calculada</span></div>
     <div style="font-size:28px;font-weight:900;color:#7c3aed"><span id="calculatedSpeedVal">--</span> <span style="font-size:14px">mph</span></div>
+    <div id="mainCalcMeta" class="muted" style="font-size:12px;margin-top:4px"></div>
    </div>
   </div>
  </div>
@@ -347,7 +414,29 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
   <label class="label" for="pitchingDistance">Distancia de lanzamiento (en metros)</label>
   <input id="pitchingDistance" type="number" step="0.1" value="13.1" placeholder="13.1 (Reglamentario sóftbol)" style="margin-bottom:4px">
   <div id="distanceImperialPreview" class="muted" style="margin-bottom:12px;font-weight:700;color:var(--green)">Equivalente: 43.0 pies</div>
-  <p class="notice" style="margin-top:-6px;margin-bottom:12px">Distancia oficial por defecto: 13.1 metros (43 pies). Modificable según categoría.</p>
+  <p class="notice" style="margin-top:-6px;margin-bottom:14px">Distancia oficial por defecto: 13.1 metros (43 pies). Modificable según categoría.</p>
+
+  <div style="border-top:1px solid var(--line);padding-top:14px;margin-bottom:14px">
+   <h3 style="margin:0 0 6px;font-size:15px;color:var(--green)">🎥 Ajustes de grabación (Vídeo y FPS)</h3>
+   <p class="notice" style="margin-top:0;margin-bottom:10px">En modo <b>Automático</b>, la app lee los tiempos reales de los fotogramas del vídeo y detecta si es cámara lenta o normal.</p>
+
+   <div class="label">Frecuencia de grabación (FPS)</div>
+   <div class="fps-chip-group" id="fpsSettingGroup">
+    <button type="button" class="fps-chip active" data-fps-val="auto">Automático</button>
+    <button type="button" class="fps-chip" data-fps-val="30">30 FPS</button>
+    <button type="button" class="fps-chip" data-fps-val="60">60 FPS</button>
+    <button type="button" class="fps-chip" data-fps-val="120">120 FPS</button>
+    <button type="button" class="fps-chip" data-fps-val="240">240 FPS</button>
+   </div>
+
+   <div class="label">Tipo de grabación</div>
+   <div class="fps-chip-group" id="recordingTypeGroup" style="margin-bottom:6px">
+    <button type="button" class="fps-chip active" data-rec-type="auto">Automático</button>
+    <button type="button" class="fps-chip" data-rec-type="normal">Normal</button>
+    <button type="button" class="fps-chip" data-rec-type="slowmo">Cámara lenta</button>
+   </div>
+   <p class="notice" style="margin-top:4px;margin-bottom:0">120 o 240 FPS también pueden grabarse para reproducción normal. La app contrastará tu selección con los fotogramas reales del archivo.</p>
+  </div>
 
   <button class="primary" style="width:100%;margin-bottom:16px" id="saveSettings">Guardar preferencias</button>
   
@@ -386,27 +475,53 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </section>
 </main>
 
-<!-- Visor Gigante de Zoom para Vídeo -->
+<!-- Visor Gigante con Zoom y Pan Libre para iPhone -->
 <div id="zoomModal">
  <div class="zoom-header">
-  <span class="zoom-title">🔍 Visor Ampliado y Cálculo de Velocidad</span>
+  <span class="zoom-title">🔍 Visor Ampliado (Zoom + Pan)</span>
   <button class="btn-close-zoom" id="closeZoomBtn">✕ Cerrar y Guardar</button>
  </div>
- <div class="zoom-video-container">
-  <video id="zoomVideo" controls playsinline></video>
+
+ <div class="zoom-toolbar">
+  <div class="zoom-pill-group">
+   <button type="button" class="zoom-tool-btn" id="zoomOutBtn">−</button>
+   <span class="zoom-level-badge" id="zoomLevelText">1.0x</span>
+   <button type="button" class="zoom-tool-btn" id="zoomInBtn">+</button>
+   <button type="button" class="zoom-tool-btn" id="zoomResetBtn">1x</button>
+  </div>
+  <div class="zoom-pill-group">
+   <button type="button" class="zoom-tool-btn" id="focusPitcherBtn" title="Ir al encuadre del pitcher">🎯 Pitcher</button>
+   <button type="button" class="zoom-tool-btn" id="focusCatcherBtn" title="Ir al encuadre del catcher">🧤 Catcher</button>
+  </div>
  </div>
+
+ <div class="zoom-video-viewport" id="zoomViewport">
+  <div class="zoom-stage" id="zoomStage">
+   <video id="zoomVideo" playsinline muted preload="auto"></video>
+  </div>
+  <div class="zoom-crosshair"></div>
+  <div class="zoom-gesture-hint" id="zoomHint">Pellizca para ampliar · Arrastra con 1 dedo para mover</div>
+ </div>
+
+ <div class="zoom-scrubber-bar">
+  <button type="button" class="zoom-tool-btn" id="zoomPlayPauseBtn">▶</button>
+  <input type="range" id="zoomTimeline" min="0" max="1000" value="0" step="1">
+  <span class="zoom-time-readout" id="zoomTimeReadout">0.000s</span>
+ </div>
+
  <div class="zoom-controls">
   <div style="display:flex;gap:8px;margin-bottom:8px">
-   <button class="secondary tiny" id="setStartFrame" style="flex:1;padding:14px;background:#059669;color:white">1️⃣ Marcar Salida (Mano)</button>
-   <button class="secondary tiny" id="setEndFrame" style="flex:1;padding:14px;background:#059669;color:white">2️⃣ Marcar Llegada (Guante)</button>
+   <button class="secondary tiny" id="setStartFrame" style="flex:1;padding:12px;background:#059669;color:white">1️⃣ Salida (Mano)</button>
+   <button class="secondary tiny" id="setEndFrame" style="flex:1;padding:12px;background:#059669;color:white">2️⃣ Llegada (Guante)</button>
   </div>
   <div class="frame-btn-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-   <button class="secondary tiny" id="prevFrame" style="padding:14px">◀ -1 Fotograma</button>
-   <button class="secondary tiny" id="nextFrame" style="padding:14px">+1 Fotograma ▶</button>
+   <button class="secondary tiny" id="prevFrame" style="padding:12px">◀ -1 Fotograma</button>
+   <button class="secondary tiny" id="nextFrame" style="padding:12px">+1 Fotograma ▶</button>
   </div>
-  <div style="margin-top:10px;text-align:center;background:white;padding:10px;border-radius:10px;color:black">
-   <span class="label">Velocidad calculada</span>
-   <div style="font-size:26px;font-weight:900;color:#7c3aed"><span id="zoomSpeedVal">--</span> <span style="font-size:14px">mph</span></div>
+  <div style="margin-top:8px;text-align:center;background:white;padding:9px 10px;border-radius:10px;color:black">
+   <div id="zoomReliabilityBadge" class="reliability-badge rel-warn">⚠️ Marca salida y llegada</div>
+   <div style="font-size:24px;font-weight:900;color:#7c3aed;line-height:1.1"><span id="zoomSpeedVal">--</span> <span style="font-size:13px">mph</span></div>
+   <div id="zoomCalcDetails" style="font-size:11px;color:#4b5563;margin-top:3px">FPS captura: -- · Fotogramas: -- · Tiempo real: --</div>
   </div>
  </div>
 </div>
@@ -528,6 +643,19 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
  </div>
 </div>
 
+<!-- Modal de comentario final del partido -->
+<div class="modal-overlay" id="commentModal">
+ <div class="modal-card" style="max-width:440px;text-align:left">
+  <h3 style="text-align:center">📝 Comentario del partido</h3>
+  <p style="text-align:center">¿Quieres añadir alguna observación a este partido?</p>
+  <textarea id="gameComment" rows="5" maxlength="1200" placeholder="Escribe aquí tus comentarios (máximo 1.200 caracteres)..." style="width:100%;font:inherit;border:1px solid var(--line);border-radius:11px;padding:11px;resize:vertical;user-select:text;-webkit-user-select:text"></textarea>
+  <div class="modal-actions" style="margin-top:14px">
+   <button class="secondary" id="commentSkip">Sin comentario</button>
+   <button class="primary" id="commentConfirm">Guardar comentario</button>
+  </div>
+ </div>
+</div>
+
 <footer>
  <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V2)</div>
  <div class="footer-sub">Herramienta de control personal.</div>
@@ -541,7 +669,7 @@ const $=id=>document.getElementById(id);
 const today=()=>new Date().toLocaleDateString('en-CA');
 const nowTime=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 
-let state={homeTeam:'',awayTeam:'',pitcherTeamSide:'home',date:today(),time:nowTime(),pitcher:'',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false,currentMode:'advanced'};
+let state={homeTeam:'',awayTeam:'',pitcherTeamSide:'home',date:today(),time:nowTime(),pitcher:'',gameField:'',tournamentName:'',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false,currentMode:'advanced'};
 let history=[];
 try{history=JSON.parse(localStorage.getItem('softbolHistory')||'[]')}catch(e){}
 try{const s=JSON.parse(localStorage.getItem('softbolCurrent')||'null');if(s)state=s}catch(e){}
@@ -549,12 +677,22 @@ try{const s=JSON.parse(localStorage.getItem('softbolCurrent')||'null');if(s)stat
 if(!state.currentMode) state.currentMode = 'advanced';
 if(!state.pitcherTeamSide) state.pitcherTeamSide = 'home';
 if(!state.time) state.time = nowTime();
+if(!state.gameField) state.gameField = '';
+if(!state.tournamentName) state.tournamentName = '';
+if(!Array.isArray(state.events)) state.events = [];
 
 const saveCurrent=()=>{try{localStorage.setItem('softbolCurrent',JSON.stringify(state))}catch(e){}};
 const saveHistory=()=>{try{localStorage.setItem('softbolHistory',JSON.stringify(history))}catch(e){}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const isHit=e=>e==='Hit del bateador'||e==='En juego';
 const isStrike=e=>e==='Strike'||e==='Strike cantado'||e==='Strike tirándole';
+
+function getWarmupBreakdown(events){
+ const innings=[...new Set((events||[]).map(e=>Number(e.inning)).filter(n=>Number.isFinite(n)&&n>0))].sort((a,b)=>a-b);
+ const byInning={};
+ innings.forEach((inning,index)=>{byInning[inning]=index===0?5:3;});
+ return {byInning,total:Object.values(byInning).reduce((sum,n)=>sum+n,0),innings};
+}
 
 let wakeLock = null;
 async function updateWakeLock() {
@@ -582,11 +720,46 @@ $('keepScreenAwakeToggle').addEventListener('change', () => {
  updateWakeLock();
 });
 
-// Analizador de Vídeo y Velocidad
+// =========================================================================
+// MÓDULO ANALIZADOR DE VÍDEO: ZOOM + PAN TÁCTIL Y CÁLCULO CON FPS REALES
+// =========================================================================
+let videoSettings = {
+ fpsMode: localStorage.getItem('softbolVideoFps') || 'auto',       // 'auto' | '30' | '60' | '120' | '240'
+ recordingType: localStorage.getItem('softbolVideoType') || 'auto' // 'auto' | 'normal' | 'slowmo'
+};
+
+let videoAnalysis = {
+ fileName: '',
+ fileSize: 0,
+ duration: 0,
+ width: 0,
+ height: 0,
+ playbackFps: null,        // Cadencia de fotogramas observada en el reproductor (ej. 30 o 60)
+ detectedCaptureFps: null, // FPS de captura inferidos (ej. 120 o 240 si es slow-mo, o igual a playback)
+ detectedIsSlowMo: null,   // true | false | null
+ isProbablyCompressed: false,
+ frameDeltas: [],          // Muestras reales de delta mediaTime
+ reliableConfidence: 'unknown' // 'verified' | 'review' | 'unreliable'
+};
+
 let startFrameTime = null;
 let endFrameTime = null;
 let lastCalculatedSpeed = null;
-const frameStep = 1 / 60;
+
+// Estado de Zoom y Pan (desplazamiento libre) en el visor
+let viewTransform = { scale: 1, x: 0, y: 0 };
+let savedPresets = { pitcher: null, catcher: null };
+let gestureState = {
+ mode: null, // 'pan' | 'pinch'
+ startX: 0,
+ startY: 0,
+ origX: 0,
+ origY: 0,
+ startDist: 0,
+ startScale: 1,
+ midX: 0,
+ midY: 0
+};
 
 const videoInput = $('videoInput');
 const videoPlayer = $('videoPlayer');
@@ -594,69 +767,697 @@ const zoomVideo = $('zoomVideo');
 const videoContainerMini = $('videoContainerMini');
 const videoControls = $('videoControls');
 const zoomModal = $('zoomModal');
+const zoomViewport = $('zoomViewport');
+const zoomStage = $('zoomStage');
+const zoomTimeline = $('zoomTimeline');
+
+function syncVideoSettingsUI(){
+ document.querySelectorAll('#fpsSettingGroup .fps-chip').forEach(btn => {
+  btn.classList.toggle('active', btn.dataset.fpsVal === videoSettings.fpsMode);
+ });
+ document.querySelectorAll('#recordingTypeGroup .fps-chip').forEach(btn => {
+  btn.classList.toggle('active', btn.dataset.recType === videoSettings.recordingType);
+ });
+}
+
+document.querySelectorAll('#fpsSettingGroup .fps-chip').forEach(btn => {
+ btn.addEventListener('click', () => {
+  videoSettings.fpsMode = btn.dataset.fpsVal;
+  localStorage.setItem('softbolVideoFps', videoSettings.fpsMode);
+  syncVideoSettingsUI();
+  updateTechSummaryUI();
+  computeSpeedFromFrames();
+ });
+});
+
+document.querySelectorAll('#recordingTypeGroup .fps-chip').forEach(btn => {
+ btn.addEventListener('click', () => {
+  videoSettings.recordingType = btn.dataset.recType;
+  localStorage.setItem('softbolVideoType', videoSettings.recordingType);
+  syncVideoSettingsUI();
+  updateTechSummaryUI();
+  computeSpeedFromFrames();
+ });
+});
+
+function snapToStandardFps(rawFps){
+ if(!rawFps || !Number.isFinite(rawFps)) return null;
+ const standards = [24, 25, 30, 50, 60, 120, 240];
+ let closest = standards[0];
+ let minDiff = Math.abs(rawFps - closest);
+ for(const s of standards){
+  const d = Math.abs(rawFps - s);
+  if(d < minDiff){ minDiff = d; closest = s; }
+ }
+ return (minDiff / closest) <= 0.14 ? closest : Math.round(rawFps);
+}
+
+// Parseo ligero de cabecera MP4/MOV para detectar pistas de vídeo, escala de tiempo y metadatos Apple slow-mo
+async function inspectVideoContainerMetadata(file){
+ const info = { isQuickTime: false, hasSlowMoTag: false, nominalFps: null, isCompressed: false };
+ try{
+  const nameLower = (file.name || '').toLowerCase();
+  if(nameLower.includes('whatsapp') || nameLower.includes('wa00')) info.isCompressed = true;
+
+  // Leer los primeros 512 KB y los últimos 512 KB (donde Apple suele guardar el átomo moov)
+  const chunkSize = 512 * 1024;
+  const headBuf = await file.slice(0, Math.min(file.size, chunkSize)).arrayBuffer();
+  const tailStart = Math.max(0, file.size - chunkSize);
+  const tailBuf = tailStart > 0 ? await file.slice(tailStart, file.size).arrayBuffer() : new ArrayBuffer(0);
+
+  const decoder = new TextDecoder('latin1');
+  const headStr = decoder.decode(headBuf);
+  const tailStr = decoder.decode(tailBuf);
+  const combined = headStr + '\n' + tailStr;
+
+  if(combined.includes('qt  ') || combined.includes('mvhd')) info.isQuickTime = true;
+  if(combined.includes('com.apple.quicktime.video-framerate') || combined.includes('slmt') || combined.includes('smta')){
+   info.hasSlowMoTag = true;
+  }
+
+  // Buscar timescale y sample duration en mdhd / stts si están visibles
+  const mdhdIdx = combined.indexOf('mdhd');
+  if(mdhdIdx !== -1 && mdhdIdx + 24 < combined.length){
+   const buf = mdhdIdx < headStr.length ? new DataView(headBuf) : new DataView(tailBuf);
+   const offset = mdhdIdx < headStr.length ? mdhdIdx : (mdhdIdx - headStr.length - 1);
+   if(offset >= 0 && offset + 24 <= buf.byteLength){
+    const version = buf.getUint8(offset + 4);
+    const timeScale = version === 1 ? buf.getUint32(offset + 20) : buf.getUint32(offset + 12);
+    if(timeScale === 120000 || timeScale === 120) info.nominalFps = 120;
+    else if(timeScale === 240000 || timeScale === 240) info.nominalFps = 240;
+   }
+  }
+ }catch(e){}
+ return info;
+}
+
+// Muestrea los fotogramas reales usando requestVideoFrameCallback para conocer el paso exacto entre frames
+function probeRealVideoFrames(videoEl){
+ return new Promise(resolve => {
+  if(!('requestVideoFrameCallback' in videoEl)){
+   resolve({ playbackFps: null, deltas: [] });
+   return;
+  }
+  const deltas = [];
+  let lastMediaTime = null;
+  let count = 0;
+  const wasPaused = videoEl.paused;
+  const origTime = videoEl.currentTime;
+  const origMuted = videoEl.muted;
+  const origRate = videoEl.playbackRate;
+
+  videoEl.muted = true;
+  videoEl.playbackRate = 1.0;
+
+  let finished = false;
+  const finish = () => {
+   if(finished) return;
+   finished = true;
+   videoEl.pause();
+   videoEl.currentTime = origTime;
+   videoEl.muted = origMuted;
+   videoEl.playbackRate = origRate;
+
+   if(deltas.length >= 3){
+    deltas.sort((a,b) => a - b);
+    const medianDelta = deltas[Math.floor(deltas.length / 2)];
+    const rawFps = medianDelta > 0 ? (1 / medianDelta) : null;
+    resolve({ playbackFps: snapToStandardFps(rawFps), deltas });
+   } else {
+    resolve({ playbackFps: null, deltas });
+   }
+  };
+
+  const safetyTimer = setTimeout(finish, 900);
+
+  const onFrame = (now, metadata) => {
+   if(finished) return;
+   if(lastMediaTime !== null && metadata && typeof metadata.mediaTime === 'number'){
+    const dt = metadata.mediaTime - lastMediaTime;
+    if(dt > 0.001 && dt < 0.25){
+     deltas.push(dt);
+    }
+   }
+   if(metadata && typeof metadata.mediaTime === 'number'){
+    lastMediaTime = metadata.mediaTime;
+   }
+   count++;
+   if(count >= 14){
+    clearTimeout(safetyTimer);
+    finish();
+   } else {
+    videoEl.requestVideoFrameCallback(onFrame);
+   }
+  };
+
+  videoEl.requestVideoFrameCallback(onFrame);
+  videoEl.play().catch(() => {
+   clearTimeout(safetyTimer);
+   finish();
+  });
+ });
+}
 
 $('recordVideoBtn').onclick = () => videoInput.click();
 
-function loadVideoFile(file){
- if(file){
-  const fileURL = URL.createObjectURL(file);
-  videoPlayer.src = fileURL;
-  zoomVideo.src = fileURL;
-  videoContainerMini.style.display = 'block';
-  videoControls.style.display = 'block';
-  startFrameTime = null;
-  endFrameTime = null;
-  $('calculatedSpeedVal').textContent = '--';
-  $('zoomSpeedVal').textContent = '--';
+async function loadVideoFile(file){
+ if(!file) return;
+ const fileURL = URL.createObjectURL(file);
+ videoPlayer.src = fileURL;
+ zoomVideo.src = fileURL;
+ videoContainerMini.style.display = 'block';
+ videoControls.style.display = 'block';
+
+ startFrameTime = null;
+ endFrameTime = null;
+ lastCalculatedSpeed = null;
+ savedPresets = { pitcher: null, catcher: null };
+ resetZoomTransform();
+
+ videoAnalysis = {
+  fileName: file.name || 'vídeo',
+  fileSize: file.size || 0,
+  duration: 0,
+  width: 0,
+  height: 0,
+  playbackFps: null,
+  detectedCaptureFps: null,
+  detectedIsSlowMo: null,
+  isProbablyCompressed: false,
+  frameDeltas: [],
+  reliableConfidence: 'unknown'
+ };
+
+ $('calculatedSpeedVal').textContent = '--';
+ $('zoomSpeedVal').textContent = '--';
+ $('videoTechSummary').textContent = 'Analizando resolución, fotogramas reales y marcas de tiempo...';
+
+ const containerInfo = await inspectVideoContainerMetadata(file);
+
+ await new Promise(res => {
+  if(zoomVideo.readyState >= 1) res();
+  else zoomVideo.addEventListener('loadedmetadata', res, { once: true });
+ });
+
+ videoAnalysis.duration = zoomVideo.duration || 0;
+ videoAnalysis.width = zoomVideo.videoWidth || 0;
+ videoAnalysis.height = zoomVideo.videoHeight || 0;
+
+ const probe = await probeRealVideoFrames(zoomVideo);
+ videoAnalysis.playbackFps = probe.playbackFps;
+ videoAnalysis.frameDeltas = probe.deltas;
+
+ // Heurística de detección de cámara lenta en iPhone:
+ // En iPhone, los vídeos exportados desde Fotos en cámara lenta suelen tener:
+ // - Metadatos QuickTime / slow-mo o tasa de bits elevada con playback a 30/60 fps
+ // - O reproducción directa a 120/240 fps si se exporta sin ralentizar
+ const mbPerSec = videoAnalysis.duration > 0 ? (file.size / (1024 * 1024)) / videoAnalysis.duration : 0;
+ videoAnalysis.isProbablyCompressed = containerInfo.isCompressed || (mbPerSec > 0 && mbPerSec < 0.45 && videoAnalysis.duration > 2);
+
+ if(containerInfo.nominalFps === 240 || containerInfo.nominalFps === 120){
+  videoAnalysis.detectedCaptureFps = containerInfo.nominalFps;
+  videoAnalysis.detectedIsSlowMo = (videoAnalysis.playbackFps && videoAnalysis.playbackFps <= 60);
+ } else if(videoAnalysis.playbackFps === 240 || videoAnalysis.playbackFps === 120){
+  videoAnalysis.detectedCaptureFps = videoAnalysis.playbackFps;
+  videoAnalysis.detectedIsSlowMo = false;
+ } else if(containerInfo.hasSlowMoTag){
+  // iPhone slow-mo estándar: 240 fps (1080p) o 120 fps
+  videoAnalysis.detectedCaptureFps = 240;
+  videoAnalysis.detectedIsSlowMo = true;
+ } else if(videoAnalysis.playbackFps){
+  videoAnalysis.detectedCaptureFps = videoAnalysis.playbackFps;
+  videoAnalysis.detectedIsSlowMo = false;
  }
+
+ updateTechSummaryUI();
+ computeSpeedFromFrames();
 }
 
 videoInput.addEventListener('change', (e) => loadVideoFile(e.target.files[0]));
 
+// Resuelve qué FPS de captura aplicar y cuál es el nivel de fiabilidad según la lógica acordada
+function resolveEffectiveFpsAndReliability(){
+ const userFps = videoSettings.fpsMode;       // 'auto' | '30' | '60' | '120' | '240'
+ const userType = videoSettings.recordingType; // 'auto' | 'normal' | 'slowmo'
+ const pbFps = videoAnalysis.playbackFps || 30;
+ const detCapFps = videoAnalysis.detectedCaptureFps;
+
+ let captureFps = null;
+ let playbackFps = pbFps;
+ let status = 'review'; // 'verified' | 'review' | 'unreliable'
+ let reason = '';
+
+ if(!videoAnalysis.duration || videoAnalysis.duration <= 0){
+  return { captureFps: null, playbackFps: 30, status: 'unreliable', reason: 'No se puede leer la duración del vídeo' };
+ }
+
+ // 1. Determinar FPS de captura efectivos
+ if(userFps !== 'auto'){
+  captureFps = Number(userFps);
+ } else if(detCapFps){
+  captureFps = detCapFps;
+ } else {
+  captureFps = pbFps;
+ }
+
+ // 2. Verificar coherencia entre selección manual, tipo de grabación y datos reales del archivo
+ const isHighFps = captureFps >= 120;
+ const isSlowMoSelected = userType === 'slowmo';
+ const isNormalSelected = userType === 'normal';
+
+ // Caso crítico: usuario pide cámara lenta o alta velocidad pero el vídeo parece recomprimido (ej. WhatsApp)
+ if(videoAnalysis.isProbablyCompressed && (isSlowMoSelected || isHighFps || userFps === 'auto')){
+  return {
+   captureFps,
+   playbackFps,
+   status: 'unreliable',
+   reason: 'Vídeo recomprimido o sin marcas originales (no se puede garantizar el tiempo real)'
+  };
+ }
+
+ // Contradicción directa: usuario indica cámara lenta con 30/60 FPS y el archivo no tiene pista slow-mo
+ if(isSlowMoSelected && !isHighFps && !videoAnalysis.detectedIsSlowMo){
+  return {
+   captureFps,
+   playbackFps,
+   status: 'unreliable',
+   reason: 'Cámara lenta seleccionada con ' + captureFps + ' FPS sin pista ralentizada verificable'
+  };
+ }
+
+ // Contradicción entre FPS manual y FPS reales detectados en el vídeo
+ if(userFps !== 'auto' && detCapFps && Number(userFps) !== detCapFps){
+  // Si el archivo reproduce a 30/60 pero el usuario sabe que grabó a 120/240 slow-mo en iPhone, avisar para revisar
+  if(isHighFps && pbFps <= 60){
+   status = 'review';
+   reason = `Ajuste manual en ${captureFps} FPS (archivo reproduce a ${pbFps} FPS; verifica que el tramo esté ralentizado)`;
+  } else {
+   status = 'review';
+   reason = `Aviso: elegiste ${captureFps} FPS pero el vídeo indica ${detCapFps} FPS`;
+  }
+ } else if(isNormalSelected && isHighFps && pbFps <= 60){
+  status = 'review';
+  reason = `Grabación normal a ${captureFps} FPS pero el archivo reproduce a ${pbFps} FPS`;
+ } else if(userFps === 'auto' && !detCapFps){
+  status = 'review';
+  reason = 'No se pudo confirmar la frecuencia exacta de captura';
+ } else {
+  status = 'verified';
+  const modeLabel = (isSlowMoSelected || (userType === 'auto' && videoAnalysis.detectedIsSlowMo)) ? 'cámara lenta' : 'normal';
+  reason = `Datos verificados (${captureFps} FPS · ${modeLabel})`;
+ }
+
+ return { captureFps, playbackFps, status, reason };
+}
+
+function updateTechSummaryUI(){
+ const res = resolveEffectiveFpsAndReliability();
+ const resStr = (videoAnalysis.width && videoAnalysis.height) ? `${videoAnalysis.width}×${videoAnalysis.height}` : 'Resolución N/D';
+ const pbStr = videoAnalysis.playbackFps ? `${videoAnalysis.playbackFps} FPS reprod.` : 'Cadencia N/D';
+ const capStr = res.captureFps ? `${res.captureFps} FPS captura` : 'FPS N/D';
+
+ let badgeHtml = '';
+ if(res.status === 'verified') badgeHtml = `<span style="color:#145f3b;font-weight:800">✅ ${esc(res.reason)}</span>`;
+ else if(res.status === 'review') badgeHtml = `<span style="color:#92400e;font-weight:800">⚠️ ${esc(res.reason)}</span>`;
+ else badgeHtml = `<span style="color:#991b1b;font-weight:800">🚫 ${esc(res.reason)}</span>`;
+
+ $('videoTechSummary').innerHTML = `
+  <div><b>Archivo:</b> ${esc(videoAnalysis.fileName)} (${resStr} · ${pbStr} · <b>${capStr}</b>)</div>
+  <div style="margin-top:3px">${badgeHtml}</div>
+ `;
+}
+
+function getFrameStepSeconds(){
+ // Avanzar exactamente 1 fotograma del stream de reproducción del vídeo
+ const pbFps = videoAnalysis.playbackFps || 60;
+ return 1 / pbFps;
+}
+
+function updateTimelineUI(){
+ const dur = zoomVideo.duration || 0;
+ const cur = zoomVideo.currentTime || 0;
+ if(dur > 0){
+  zoomTimeline.value = Math.round((cur / dur) * 1000);
+ }
+ $('zoomTimeReadout').textContent = `${cur.toFixed(3)}s`;
+}
+
+zoomVideo.addEventListener('timeupdate', updateTimelineUI);
+zoomVideo.addEventListener('loadedmetadata', updateTimelineUI);
+
+zoomTimeline.addEventListener('input', () => {
+ const dur = zoomVideo.duration || 0;
+ if(dur > 0){
+  zoomVideo.pause();
+  $('zoomPlayPauseBtn').textContent = '▶';
+  zoomVideo.currentTime = (Number(zoomTimeline.value) / 1000) * dur;
+  updateTimelineUI();
+ }
+});
+
+$('zoomPlayPauseBtn').onclick = () => {
+ if(zoomVideo.paused){
+  zoomVideo.play().catch(()=>{});
+  $('zoomPlayPauseBtn').textContent = '⏸';
+ } else {
+  zoomVideo.pause();
+  $('zoomPlayPauseBtn').textContent = '▶';
+ }
+};
+
+zoomVideo.addEventListener('ended', () => {
+ $('zoomPlayPauseBtn').textContent = '▶';
+});
+
+// =========================================================================
+// MOTOR DE ZOOM Y PAN LIBRE (PELLIZCO + ARRASTRE CON 1 DEDO)
+// =========================================================================
+function applyViewTransform(){
+ const rect = zoomViewport.getBoundingClientRect();
+ const maxScale = 6;
+ const minScale = 1;
+ viewTransform.scale = Math.max(minScale, Math.min(maxScale, viewTransform.scale));
+
+ if(viewTransform.scale <= 1.01){
+  viewTransform.scale = 1;
+  viewTransform.x = 0;
+  viewTransform.y = 0;
+ } else {
+  const maxX = 0;
+  const minX = rect.width * (1 - viewTransform.scale);
+  const maxY = 0;
+  const minY = rect.height * (1 - viewTransform.scale);
+  viewTransform.x = Math.max(minX, Math.min(maxX, viewTransform.x));
+  viewTransform.y = Math.max(minY, Math.min(maxY, viewTransform.y));
+ }
+
+ zoomStage.style.transform = `translate3d(${viewTransform.x}px, ${viewTransform.y}px, 0) scale(${viewTransform.scale})`;
+ $('zoomLevelText').textContent = `${viewTransform.scale.toFixed(1)}x`;
+ $('zoomHint').style.display = viewTransform.scale > 1.05 ? 'none' : 'block';
+}
+
+function resetZoomTransform(){
+ viewTransform = { scale: 1, x: 0, y: 0 };
+ applyViewTransform();
+}
+
+function zoomAtPoint(newScale, clientX, clientY){
+ const rect = zoomViewport.getBoundingClientRect();
+ const px = clientX - rect.left;
+ const py = clientY - rect.top;
+
+ const clampedScale = Math.max(1, Math.min(6, newScale));
+ const ratio = clampedScale / viewTransform.scale;
+
+ viewTransform.x = px - (px - viewTransform.x) * ratio;
+ viewTransform.y = py - (py - viewTransform.y) * ratio;
+ viewTransform.scale = clampedScale;
+ applyViewTransform();
+}
+
+$('zoomInBtn').onclick = () => {
+ const rect = zoomViewport.getBoundingClientRect();
+ zoomAtPoint(viewTransform.scale + 0.75, rect.left + rect.width / 2, rect.top + rect.height / 2);
+};
+
+$('zoomOutBtn').onclick = () => {
+ const rect = zoomViewport.getBoundingClientRect();
+ zoomAtPoint(viewTransform.scale - 0.75, rect.left + rect.width / 2, rect.top + rect.height / 2);
+};
+
+$('zoomResetBtn').onclick = resetZoomTransform;
+
+// Saltar entre el encuadre guardado del Pitcher y el del Catcher
+$('focusPitcherBtn').onclick = () => {
+ if(savedPresets.pitcher){
+  viewTransform = { ...savedPresets.pitcher };
+  applyViewTransform();
+ } else {
+  // Encuadre inicial por defecto hacia la zona izquierda/central si aún no se ha guardado
+  const rect = zoomViewport.getBoundingClientRect();
+  viewTransform = { scale: 2.5, x: -rect.width * 0.15, y: -rect.height * 0.45 };
+  applyViewTransform();
+ }
+};
+
+$('focusCatcherBtn').onclick = () => {
+ if(savedPresets.catcher){
+  viewTransform = { ...savedPresets.catcher };
+  applyViewTransform();
+ } else {
+  // Encuadre inicial por defecto hacia la zona derecha si aún no se ha guardado
+  const rect = zoomViewport.getBoundingClientRect();
+  viewTransform = { scale: 2.5, x: -rect.width * 1.15, y: -rect.height * 0.45 };
+  applyViewTransform();
+ }
+};
+
+// Gestos táctiles (1 dedo = pan / arrastrar, 2 dedos = pellizco + pan)
+zoomViewport.addEventListener('touchstart', (e) => {
+ if(e.touches.length === 1){
+  gestureState.mode = 'pan';
+  gestureState.startX = e.touches[0].clientX;
+  gestureState.startY = e.touches[0].clientY;
+  gestureState.origX = viewTransform.x;
+  gestureState.origY = viewTransform.y;
+ } else if(e.touches.length === 2){
+  e.preventDefault();
+  gestureState.mode = 'pinch';
+  const t1 = e.touches[0], t2 = e.touches[1];
+  gestureState.startDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY) || 1;
+  gestureState.startScale = viewTransform.scale;
+  gestureState.midX = (t1.clientX + t2.clientX) / 2;
+  gestureState.midY = (t1.clientY + t2.clientY) / 2;
+  gestureState.origX = viewTransform.x;
+  gestureState.origY = viewTransform.y;
+ }
+}, { passive: false });
+
+zoomViewport.addEventListener('touchmove', (e) => {
+ if(gestureState.mode === 'pan' && e.touches.length === 1){
+  if(viewTransform.scale > 1){
+   e.preventDefault();
+   const dx = e.touches[0].clientX - gestureState.startX;
+   const dy = e.touches[0].clientY - gestureState.startY;
+   viewTransform.x = gestureState.origX + dx;
+   viewTransform.y = gestureState.origY + dy;
+   applyViewTransform();
+  }
+ } else if(gestureState.mode === 'pinch' && e.touches.length === 2){
+  e.preventDefault();
+  const t1 = e.touches[0], t2 = e.touches[1];
+  const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY) || 1;
+  const newMidX = (t1.clientX + t2.clientX) / 2;
+  const newMidY = (t1.clientY + t2.clientY) / 2;
+
+  const rect = zoomViewport.getBoundingClientRect();
+  const targetScale = Math.max(1, Math.min(6, gestureState.startScale * (dist / gestureState.startDist)));
+  const ratio = targetScale / gestureState.startScale;
+
+  const anchorX = gestureState.midX - rect.left;
+  const anchorY = gestureState.midY - rect.top;
+  const panShiftX = newMidX - gestureState.midX;
+  const panShiftY = newMidY - gestureState.midY;
+
+  viewTransform.scale = targetScale;
+  viewTransform.x = anchorX - (anchorX - gestureState.origX) * ratio + panShiftX;
+  viewTransform.y = anchorY - (anchorY - gestureState.origY) * ratio + panShiftY;
+  applyViewTransform();
+ }
+}, { passive: false });
+
+zoomViewport.addEventListener('touchend', (e) => {
+ if(e.touches.length === 0){
+  gestureState.mode = null;
+ } else if(e.touches.length === 1){
+  gestureState.mode = 'pan';
+  gestureState.startX = e.touches[0].clientX;
+  gestureState.startY = e.touches[0].clientY;
+  gestureState.origX = viewTransform.x;
+  gestureState.origY = viewTransform.y;
+ }
+});
+
+// Soporte también con ratón en ordenador (rueda para zoom + arrastrar para mover)
+let mouseDragging = false;
+zoomViewport.addEventListener('mousedown', (e) => {
+ if(viewTransform.scale <= 1) return;
+ mouseDragging = true;
+ gestureState.startX = e.clientX;
+ gestureState.startY = e.clientY;
+ gestureState.origX = viewTransform.x;
+ gestureState.origY = viewTransform.y;
+});
+window.addEventListener('mousemove', (e) => {
+ if(!mouseDragging) return;
+ viewTransform.x = gestureState.origX + (e.clientX - gestureState.startX);
+ viewTransform.y = gestureState.origY + (e.clientY - gestureState.startY);
+ applyViewTransform();
+});
+window.addEventListener('mouseup', () => { mouseDragging = false; });
+zoomViewport.addEventListener('wheel', (e) => {
+ e.preventDefault();
+ const delta = e.deltaY < 0 ? 0.4 : -0.4;
+ zoomAtPoint(viewTransform.scale + delta, e.clientX, e.clientY);
+}, { passive: false });
+
+// Doble toque rápido para alternar zoom 1x / 3x en el punto tocado
+let lastTapTime = 0;
+zoomViewport.addEventListener('click', (e) => {
+ const now = Date.now();
+ if(now - lastTapTime < 280){
+  if(viewTransform.scale > 1.2) resetZoomTransform();
+  else zoomAtPoint(3.0, e.clientX, e.clientY);
+ }
+ lastTapTime = now;
+});
+
 $('openZoomBtn').onclick = () => {
  zoomModal.classList.add('active');
+ zoomVideo.pause();
+ $('zoomPlayPauseBtn').textContent = '▶';
  zoomVideo.currentTime = videoPlayer.currentTime;
+ updateTimelineUI();
+ applyViewTransform();
+ computeSpeedFromFrames();
 };
 
 $('closeZoomBtn').onclick = () => {
+ zoomVideo.pause();
  videoPlayer.currentTime = zoomVideo.currentTime;
  zoomModal.classList.remove('active');
 };
 
 $('setStartFrame').onclick = () => {
+ zoomVideo.pause();
+ $('zoomPlayPauseBtn').textContent = '▶';
  startFrameTime = zoomVideo.currentTime;
+ if(viewTransform.scale > 1.05){
+  savedPresets.pitcher = { ...viewTransform };
+ }
  computeSpeedFromFrames();
 };
 
 $('setEndFrame').onclick = () => {
+ zoomVideo.pause();
+ $('zoomPlayPauseBtn').textContent = '▶';
  endFrameTime = zoomVideo.currentTime;
+ if(viewTransform.scale > 1.05){
+  savedPresets.catcher = { ...viewTransform };
+ }
  computeSpeedFromFrames();
 };
 
-$('prevFrame').onclick = () => { 
- zoomVideo.currentTime = Math.max(0, zoomVideo.currentTime - frameStep); 
+$('prevFrame').onclick = () => {
+ zoomVideo.pause();
+ $('zoomPlayPauseBtn').textContent = '▶';
+ const step = getFrameStepSeconds();
+ zoomVideo.currentTime = Math.max(0, zoomVideo.currentTime - step);
+ updateTimelineUI();
  computeSpeedFromFrames();
 };
 
-$('nextFrame').onclick = () => { 
- zoomVideo.currentTime = Math.min(zoomVideo.duration || 0, zoomVideo.currentTime + frameStep); 
+$('nextFrame').onclick = () => {
+ zoomVideo.pause();
+ $('zoomPlayPauseBtn').textContent = '▶';
+ const step = getFrameStepSeconds();
+ zoomVideo.currentTime = Math.min(zoomVideo.duration || 0, zoomVideo.currentTime + step);
+ updateTimelineUI();
  computeSpeedFromFrames();
 };
+
+function renderReliabilityBadges(status, text){
+ const cls = status === 'verified' ? 'rel-ok' : (status === 'review' ? 'rel-warn' : 'rel-bad');
+ const icon = status === 'verified' ? '✅ Datos verificados' : (status === 'review' ? '⚠️ Revisar FPS' : '🚫 Medición no fiable');
+ const fullText = text ? `${icon} · ${text}` : icon;
+
+ const mainB = $('mainReliabilityBadge');
+ const zoomB = $('zoomReliabilityBadge');
+ if(mainB){ mainB.className = `reliability-badge ${cls}`; mainB.textContent = fullText; }
+ if(zoomB){ zoomB.className = `reliability-badge ${cls}`; zoomB.textContent = fullText; }
+}
 
 function computeSpeedFromFrames(){
- if(startFrameTime !== null && endFrameTime !== null && endFrameTime > startFrameTime){
-  const diffSeconds = endFrameTime - startFrameTime;
-  if(diffSeconds > 0.01 && diffSeconds < 10.0){
-   const distanceMeters = Number(localStorage.getItem('softbolDistance') || '13.1');
-   const metersPerSecond = distanceMeters / diffSeconds;
-   const mph = metersPerSecond * 2.23694;
-   if(mph > 5 && mph < 150){
-    lastCalculatedSpeed = Number(mph.toFixed(1));
-    $('calculatedSpeedVal').textContent = lastCalculatedSpeed;
-    $('zoomSpeedVal').textContent = lastCalculatedSpeed;
-   }
-  }
+ const res = resolveEffectiveFpsAndReliability();
+
+ if(startFrameTime === null || endFrameTime === null){
+  lastCalculatedSpeed = null;
+  $('calculatedSpeedVal').textContent = '--';
+  $('zoomSpeedVal').textContent = '--';
+  const missingTxt = startFrameTime === null ? 'Marca salida y llegada' : 'Falta marcar llegada';
+  renderReliabilityBadges(res.status === 'unreliable' ? 'unreliable' : 'review', missingTxt);
+  $('zoomCalcDetails').textContent = `FPS captura: ${res.captureFps || '--'} · Fotogramas: -- · Tiempo real: --`;
+  $('mainCalcMeta').textContent = '';
+  return;
  }
+
+ const videoSpanSeconds = endFrameTime - startFrameTime;
+ if(videoSpanSeconds <= 0.002){
+  lastCalculatedSpeed = null;
+  $('calculatedSpeedVal').textContent = '--';
+  $('zoomSpeedVal').textContent = '--';
+  renderReliabilityBadges('unreliable', 'La llegada debe ser posterior a la salida');
+  $('zoomCalcDetails').textContent = 'Marca primero la salida y después la llegada';
+  return;
+ }
+
+ // Número de fotogramas reales transcurridos en el archivo entre salida y llegada
+ const playbackFps = res.playbackFps || 30;
+ const captureFps = res.captureFps || playbackFps;
+ const framesCount = Math.round(videoSpanSeconds * playbackFps);
+
+ // Tiempo real del lanzamiento usando los FPS reales de captura (nunca mezclando reproducción con captura)
+ // Si el archivo ya reproduce a 120/240 FPS reales, playbackFps === captureFps y realSeconds === videoSpanSeconds.
+ // Si es slow-mo exportado a 30/60 FPS, realSeconds = framesCount / captureFps.
+ const isSlowMoRatio = (captureFps > playbackFps) && (
+  videoSettings.recordingType === 'slowmo' ||
+  (videoSettings.recordingType === 'auto' && videoAnalysis.detectedIsSlowMo) ||
+  videoSettings.fpsMode !== 'auto'
+ );
+
+ const effectiveCaptureFps = isSlowMoRatio ? captureFps : playbackFps;
+ const realSeconds = framesCount / effectiveCaptureFps;
+
+ // Si la medición no es fiable, NO mostrar una velocidad aparentemente precisa pero errónea
+ if(res.status === 'unreliable' || framesCount < 2 || realSeconds <= 0.05 || realSeconds > 5.0){
+  lastCalculatedSpeed = null;
+  $('calculatedSpeedVal').textContent = '--';
+  $('zoomSpeedVal').textContent = '--';
+  const failReason = res.status === 'unreliable'
+   ? res.reason
+   : 'Tiempo real fuera de rango físico (revisa los fotogramas marcados)';
+  renderReliabilityBadges('unreliable', failReason);
+  $('zoomCalcDetails').textContent = `Fotogramas: ${framesCount} · FPS: ${effectiveCaptureFps} · Tiempo: ${realSeconds.toFixed(3)}s`;
+  $('mainCalcMeta').textContent = failReason;
+  return;
+ }
+
+ const distanceMeters = Number(localStorage.getItem('softbolDistance') || '13.1');
+ const metersPerSecond = distanceMeters / realSeconds;
+ const mph = metersPerSecond * 2.23694;
+
+ if(mph < 10 || mph > 130){
+  lastCalculatedSpeed = null;
+  $('calculatedSpeedVal').textContent = '--';
+  $('zoomSpeedVal').textContent = '--';
+  renderReliabilityBadges('unreliable', `Velocidad resultante inverosímil (${mph.toFixed(1)} mph)`);
+  $('zoomCalcDetails').textContent = `Fotogramas: ${framesCount} · FPS: ${effectiveCaptureFps} · Tiempo real: ${realSeconds.toFixed(3)}s`;
+  $('mainCalcMeta').textContent = 'Revisa los FPS de captura o las marcas de salida/llegada.';
+  return;
+ }
+
+ lastCalculatedSpeed = Number(mph.toFixed(1));
+ $('calculatedSpeedVal').textContent = lastCalculatedSpeed;
+ $('zoomSpeedVal').textContent = lastCalculatedSpeed;
+
+ const statusDetail = res.status === 'verified'
+  ? `${effectiveCaptureFps} FPS verificados`
+  : res.reason;
+
+ renderReliabilityBadges(res.status, statusDetail);
+ const detailLine = `FPS captura: ${effectiveCaptureFps} · Fotogramas: ${framesCount} · Tiempo real: ${realSeconds.toFixed(3)}s`;
+ $('zoomCalcDetails').textContent = detailLine;
+ $('mainCalcMeta').textContent = detailLine;
 }
 
 function updateDistancePreview(meters){
@@ -754,6 +1555,22 @@ function promptForScore() {
  });
 }
 
+function promptForComment(){
+ return new Promise(resolve=>{
+  $('gameComment').value='';
+  $('commentModal').classList.add('active');
+  const cleanup=()=>{
+   $('commentModal').classList.remove('active');
+   $('commentSkip').removeEventListener('click',onSkip);
+   $('commentConfirm').removeEventListener('click',onConfirm);
+  };
+  const onSkip=()=>{cleanup();resolve('');};
+  const onConfirm=()=>{const value=$('gameComment').value.trim();cleanup();resolve(value);};
+  $('commentSkip').addEventListener('click',onSkip);
+  $('commentConfirm').addEventListener('click',onConfirm);
+ });
+}
+
 function updateTeamSelectOptions(){
  const home = $('homeTeam').value.trim() || 'Local';
  const away = $('awayTeam').value.trim() || 'Visitante';
@@ -770,10 +1587,13 @@ function syncInputs(){
 
  $('gameDate').value=state.date||today();
  $('gameTime').value=state.time||nowTime();
+ $('gameField').value=state.gameField||'';
+ $('tournamentName').value=state.tournamentName||'';
  $('pitcher').value=state.pitcher||localStorage.getItem('softbolPitcher')||'Ari'; 
  const dist = localStorage.getItem('softbolDistance') || '13.1';
  $('pitchingDistance').value = dist;
  updateDistancePreview(Number(dist));
+ syncVideoSettingsUI();
  const savedToggle = localStorage.getItem('softbolAllowMidChange') === 'true';
  $('allowModeChangeToggle').checked = savedToggle;
  const keepAwakeVal = localStorage.getItem('softbolKeepAwake') === 'true';
@@ -810,14 +1630,15 @@ function renderDots(containerId, maxDots, activeCount, activeClass){
 }
 
 function render(){
- const totalPitches = state.events.length;
+ const warmupTotal = getWarmupBreakdown(state.events).total;
+ const totalPitches = state.events.length + warmupTotal;
  const currentInningPitches = inningEvents(state.inning).length;
 
  $('total').textContent = totalPitches;
  $('inningTotal').textContent = currentInningPitches;
  $('inningsDone').textContent = state.inning;
  $('inningLabel').textContent = state.inning;
- $('logCount').textContent = totalPitches + ' registrados';
+ $('logCount').textContent = state.events.length + ' registrados';
 
  let val1=0, val2=0, lbl1='BOLAS', lbl2='STRIKES', showBox2=true;
  const currentInningEvts = inningEvents(state.inning);
@@ -929,7 +1750,7 @@ function addPitch(type){
 
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));if(b.dataset.tab==='history')renderHistory()}));
 document.querySelectorAll('[data-event]').forEach(b=>b.addEventListener('click',()=>addPitch(b.dataset.event)));
-['gameDate','gameTime','pitcher'].forEach(id=>$(id).addEventListener('change',()=>{state.date=$('gameDate').value;state.time=$('gameTime').value;state.pitcher=$('pitcher').value;saveCurrent()}));
+['gameDate','gameTime','pitcher','gameField','tournamentName','homeTeam','awayTeam','pitcherTeamSide'].forEach(id=>$(id).addEventListener('change',()=>{state.date=$('gameDate').value;state.time=$('gameTime').value;state.pitcher=$('pitcher').value;state.gameField=$('gameField').value.trim();state.tournamentName=$('tournamentName').value.trim();state.homeTeam=$('homeTeam').value.trim();state.awayTeam=$('awayTeam').value.trim();state.pitcherTeamSide=$('pitcherTeamSide').value;state.saved=false;saveCurrent()}));
 
 function doNextInning(){
  state.innings[state.inning]={
@@ -998,7 +1819,10 @@ function getGameComputedStats(events, inningsObj){
   let ks=0, bbs=0;
   Object.values(uniqueTurns).forEach(out=>{ if(out==='K') ks++; if(out==='BB') bbs++; });
 
-  const totalPitches = events.length;
+  const actualPitches = events.length;
+  const warmup = getWarmupBreakdown(events);
+  const warmupPitches = warmup.total;
+  const totalPitches = actualPitches + warmupPitches;
   const balls = events.filter(e=>e.type==='Bola'||e.type==='Bola Mala').length;
   const strikes = events.filter(e=>isStrike(e.type)||e.type==='Bola Buena').length;
   const fouls = events.filter(e=>e.type==='Foul').length;
@@ -1020,7 +1844,7 @@ function getGameComputedStats(events, inningsObj){
   const maxSpeed = speeds.length ? Math.max(...speeds) : 0;
   const avgSpeed = speeds.length ? (speeds.reduce((a,b)=>a+b,0)/speeds.length).toFixed(1) : 0;
 
-  return {totalPitches, balls, strikes, fouls, hits, hbps, ks, bbs, uniqueInnings, totalTurns, isBasic, isSimple, goodPitches, badPitches, maxSpeed, avgSpeed};
+  return {totalPitches, actualPitches, warmupPitches, warmupByInning:warmup.byInning, balls, strikes, fouls, hits, hbps, ks, bbs, uniqueInnings, totalTurns, isBasic, isSimple, goodPitches, badPitches, maxSpeed, avgSpeed};
 }
 
 async function gameObjWithScore(){
@@ -1030,12 +1854,16 @@ async function gameObjWithScore(){
  state.date=$('gameDate').value||today();
  state.time=$('gameTime').value||nowTime();
  state.pitcher=$('pitcher').value.trim();
+ state.gameField=$('gameField').value.trim();
+ state.tournamentName=$('tournamentName').value.trim();
  
  const homeStr = state.homeTeam || 'Local';
  const awayStr = state.awayTeam || 'Visitante';
  const pTeamStr = state.pitcherTeamSide === 'home' ? homeStr : awayStr;
 
  const res = await promptForScore();
+ const comment = await promptForComment();
+ const warmup = getWarmupBreakdown(state.events);
 
  return {
   id:Date.now(),
@@ -1047,7 +1875,13 @@ async function gameObjWithScore(){
   date:state.date,
   time:state.time,
   pitcher:state.pitcher||'Pitcher',
-  total:state.events.length,
+  gameField:state.gameField||'',
+  tournamentName:state.tournamentName||'',
+  comment,
+  warmupPitches:warmup.total,
+  warmupByInning:warmup.byInning,
+  actualPitches:state.events.length,
+  total:state.events.length+warmup.total,
   mode:state.currentMode,
   innings:JSON.parse(JSON.stringify(state.innings)),
   events:state.events.slice(),
@@ -1056,18 +1890,35 @@ async function gameObjWithScore(){
    pitches:state.events.filter(e=>e.inning===i+1).length,
    balls:state.events.filter(e=>e.inning===i+1&&(e.type==='Bola'||e.type==='Bola Mala')).length,
    strikes:state.events.filter(e=>e.inning===i+1&&(isStrike(e.type)||e.type==='Bola Buena')).length,
-   fouls:state.events.filter(e=>e.inning===i+1&&e.type==='Foul').length
+   fouls:state.events.filter(e=>e.inning===i+1&&e.type==='Foul').length,
+   hits:state.events.filter(e=>e.inning===i+1&&isHit(e.type)).length,
+   hbp:state.events.filter(e=>e.inning===i+1&&e.type==='Golpeada').length
   }))
  };
 }
 
+function gameIdentity(g){
+ return [g.date||'',g.time||'',(g.homeTeam||'').trim().toLowerCase(),(g.awayTeam||'').trim().toLowerCase(),(g.pitcher||'').trim().toLowerCase(),(g.gameField||'').trim().toLowerCase(),(g.tournamentName||'').trim().toLowerCase()].join('|');
+}
 async function performSaveGame(){
  const g=await gameObjWithScore();
- const idx=history.findIndex(x=>x.id===g.id);
- if(idx>=0)history[idx]=g;else history.unshift(g);
- saveHistory();state.saved=true;saveCurrent();
- alert('Partido guardado en el histórico de este dispositivo.');
+ const key=gameIdentity(g);
+ const idx=history.findIndex(x=>x.id===(state.savedGameId||g.id) || (x.gameKey && x.gameKey===key) || (!x.gameKey && gameIdentity(x)===key));
+ if(idx>=0){
+  const old=history[idx];
+  const replace=await showModal('Partido ya guardado','Ya existe un partido con la misma fecha, equipos, pitcher, campo y competición. ¿Quieres machacar el registro anterior del histórico?',true);
+  if(!replace){state.saved=!!state.saved;saveCurrent();return false;}
+  g.id=old.id;
+  g.gameKey=key;
+  history[idx]=g;
+ }else{
+  g.gameKey=key;
+  history.unshift(g);
+ }
+ saveHistory();state.saved=true;state.savedGameId=g.id;saveCurrent();
+ alert(idx>=0?'Partido actualizado. Se ha sustituido el registro anterior.':'Partido guardado en el histórico de este dispositivo.');
  renderHistory();
+ return true;
 }
 
 $('saveGame').onclick=async()=>{
@@ -1076,12 +1927,13 @@ $('saveGame').onclick=async()=>{
 };
 
 $('newGame').onclick=async()=>{
- if(state.events.length){
+ if(state.events.length && !state.saved){
   const confirmed = await showModal('Nuevo partido', 'Se guardará automáticamente el partido actual en el histórico antes de iniciar uno nuevo. ¿Continuar?');
   if(!confirmed) return;
-  await performSaveGame();
+  const didSave=await performSaveGame();
+  if(!didSave)return;
  }
- state={homeTeam:'',awayTeam:'',pitcherTeamSide:'home',date:today(),time:nowTime(),pitcher:localStorage.getItem('softbolPitcher')||'Ari',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false,currentMode:state.currentMode||'advanced'};
+ state={homeTeam:'',awayTeam:'',pitcherTeamSide:'home',date:today(),time:nowTime(),pitcher:localStorage.getItem('softbolPitcher')||'Ari',gameField:'',tournamentName:'',inning:1,balls:0,strikes:0,events:[],innings:{},saved:false,currentMode:state.currentMode||'advanced'};
  syncInputs();render();
 };
 
@@ -1129,6 +1981,9 @@ function renderHistory(){
 
   let speedBadge = stats.maxSpeed > 0 ? `<div style="margin-top:4px;font-size:12px;font-weight:700;color:#6b21a8">⚡ Velocidad Máx: ${stats.maxSpeed} mph (Med: ${stats.avgSpeed} mph)</div>` : '';
   let scoreBadge = g.finalScore ? `<div style="margin-top:4px;font-size:13px;font-weight:800;color:var(--green)">🏆 Resultado final: ${esc(g.finalScore)}</div>` : '';
+  let gameMeta = [g.gameField ? `📍 Campo: ${esc(g.gameField)}` : '', g.tournamentName ? `🏆 Torneo: ${esc(g.tournamentName)}` : ''].filter(Boolean).join(' &nbsp;·&nbsp; ');
+  let warmupHtml = `<div class="vs-grid" style="grid-template-columns:1fr 1fr;margin-top:6px"><div class="vs-box vs-purple"><span>Warm-up entre inn.</span><strong>${stats.warmupPitches}</strong></div><div class="vs-box vs-green"><span>Total partido (incl. warm-up)</span><strong>${stats.totalPitches}</strong></div></div>`;
+  let commentHtml = g.comment ? `<div style="margin-top:10px;background:#f7f8f5;border-radius:10px;padding:10px;font-size:13px;white-space:pre-wrap"><b>📝 Comentario:</b><br>${esc(g.comment)}</div>` : '';
 
   let gridHtml = '';
   if(isSimple){
@@ -1147,6 +2002,7 @@ function renderHistory(){
      <div class="vs-info" style="flex:1">
       <strong>⚾ ${matchTitleDisplay}</strong>
       <span>📅 Fecha: ${esc(g.date)} (${esc(g.time||'--:--')}) &nbsp;·&nbsp; 👤 Pitcher: ${esc(g.pitcher)}</span>
+      ${gameMeta ? `<span>${gameMeta}</span>` : ''}
       ${scoreBadge}
       ${evoHtml}
       ${speedBadge}
@@ -1157,6 +2013,8 @@ function renderHistory(){
      </div>
     </div>
     ${gridHtml}
+    ${warmupHtml}
+    ${commentHtml}
     <div style="margin-top:10px;text-align:right">
      <button class="secondary tiny" data-detail="${g.id}">Ver detalle por entradas</button>
     </div>
@@ -1176,9 +2034,9 @@ function renderHistory(){
   text += `📅 Fecha: ${g.date} (${g.time||'--:--'})\n`;
   if(g.finalScore) text += `🏆 Resultado: ${g.finalScore}\n`;
   text += `👤 Pitcher: ${g.pitcher}\n`;
+  if(g.gameField) text += `📍 Campo de juego: ${g.gameField}\n`;
+  if(g.tournamentName) text += `🏆 Torneo/Competición: ${g.tournamentName}\n`;
   if(stats.maxSpeed > 0) text += `⚡ Velocidad Máx: ${stats.maxSpeed} mph\n`;
-  text += `\n`;
-
   if(isSimple){
     text += `• Total pitcheos: ${stats.totalPitches}\n• Innings pitcheando: ${stats.uniqueInnings}\n`;
   } else if(isBasic){
@@ -1187,6 +2045,8 @@ function renderHistory(){
     text += `• Total pitcheos: ${stats.totalPitches}\n• Turnos bateadores: ${stats.totalTurns}\n• Innings pitcheando: ${stats.uniqueInnings}\n• Ponchados (K): ${stats.ks}\n• Strikes: ${stats.strikes}\n• Hits (incl. fouls): ${stats.hits + stats.fouls}\n• Bolas + HBP: ${stats.balls + stats.hbps}\n• Bases por bola (BB): ${stats.bbs}\n`;
   }
 
+  if(g.comment) text += `\n📝 Comentario: ${g.comment}\n`;
+  text += `\n• Warm-up entre inn.: ${stats.warmupPitches} pitcheos\n`;
   const encoded = encodeURIComponent(text);
   window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
  });
@@ -1195,7 +2055,10 @@ function renderHistory(){
   const g=history.find(x=>x.id===Number(b.dataset.detail));
   const el=$('detail-'+g.id);
   if(el.innerHTML){el.innerHTML='';return}
-  el.innerHTML=`<div style="background:#f2f5ef;padding:10px;border-radius:10px;font-size:13px"><b>Resumen por entrada</b><ul class="log" style="margin-top:6px">${(g.inningTotals||[]).map(i=>`<li><span>Entrada ${i.inning}</span><b>${i.pitches} pitcheos (B: ${i.balls}, S: ${i.strikes}, F: ${i.fouls})</b></li>`).join('')}</ul></div>`;
+  const totals=(g.inningTotals||[]).map(i=>`<li><span>Entrada ${i.inning}</span><b>${i.pitches} pitcheos · B: ${i.balls} · S: ${i.strikes} · F: ${i.fouls} · Hits: ${i.hits??(g.events||[]).filter(e=>e.inning===i.inning&&isHit(e.type)).length}</b></li>`).join('');
+  const innings=[...new Set((g.events||[]).map(e=>e.inning))].sort((a,b)=>a-b);
+  const eventDetails=innings.map(n=>`<div style="margin-top:8px"><b>Entrada ${n} · Lanzamientos registrados</b><ul class="log">${(g.events||[]).filter(e=>e.inning===n).map(e=>`<li><span>${esc(e.type)}${e.speed?` · ${e.speed} mph`:''}</span><b>#${e.num||''}</b></li>`).join('')}</ul></div>`).join('');
+  el.innerHTML=`<div style="background:#f2f5ef;padding:10px;border-radius:10px;font-size:13px"><b>Resumen por entrada</b><ul class="log" style="margin-top:6px">${totals}</ul>${eventDetails}</div>`;
  });
 
  document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{
@@ -1210,6 +2073,8 @@ $('exportBackupBtn').onclick = () => {
   exportDate: new Date().toISOString(),
   pitcher: localStorage.getItem('softbolPitcher') || '',
   distance: localStorage.getItem('softbolDistance') || '13.1',
+  videoFps: videoSettings.fpsMode,
+  videoType: videoSettings.recordingType,
   allowMidChange: localStorage.getItem('softbolAllowMidChange') || 'false',
   keepAwake: localStorage.getItem('softbolKeepAwake') || 'false',
   history: history,
@@ -1240,6 +2105,8 @@ $('importFileInput').onchange = (event) => {
       if(backup.current) state = backup.current;
       if(backup.pitcher) localStorage.setItem('softbolPitcher', backup.pitcher);
       if(backup.distance) localStorage.setItem('softbolDistance', backup.distance);
+      if(backup.videoFps){ videoSettings.fpsMode = backup.videoFps; localStorage.setItem('softbolVideoFps', backup.videoFps); }
+      if(backup.videoType){ videoSettings.recordingType = backup.videoType; localStorage.setItem('softbolVideoType', backup.videoType); }
       if(backup.allowMidChange) localStorage.setItem('softbolAllowMidChange', backup.allowMidChange);
       if(backup.keepAwake) { localStorage.setItem('softbolKeepAwake', backup.keepAwake); $('keepScreenAwakeToggle').checked = (backup.keepAwake === 'true'); }
       saveHistory(); saveCurrent(); syncInputs(); updateWakeLock();
@@ -1301,30 +2168,30 @@ $('export').onclick=async()=>{
 
   const summary=workbook.addWorksheet('Resumen Entradas');
   summary.columns=[
-    {header:'Fecha',key:'date',width:14}, {header:'Hora',key:'time',width:10}, {header:'Resultado',key:'finalScore',width:14}, {header:'Partido / Rival',key:'opponent',width:25}, {header:'Pitcher',key:'pitcher',width:20},
-    {header:'Pitcheos totales',key:'total',width:18}, {header:'Entrada',key:'inning',width:12}, {header:'Pitcheos inn',key:'pitches',width:19},
-    {header:'Bolas / Malas',key:'balls',width:14}, {header:'Strikes / Buenas',key:'strikes',width:15}, {header:'Fouls',key:'fouls',width:10}
+    {header:'N.º Partido',key:'gameNo',width:12}, {header:'Fecha',key:'date',width:14}, {header:'Hora',key:'time',width:10}, {header:'Resultado',key:'finalScore',width:14}, {header:'Partido / Rival',key:'opponent',width:25}, {header:'Pitcher',key:'pitcher',width:20}, {header:'Campo de juego',key:'gameField',width:22}, {header:'Torneo / Competición',key:'tournamentName',width:24},
+    {header:'Pitcheos totales (incl. warm-up)',key:'total',width:25}, {header:'Entrada',key:'inning',width:12}, {header:'Pitcheos inn',key:'pitches',width:19},
+    {header:'Bolas / Malas',key:'balls',width:14}, {header:'Warm-up entre inn.',key:'warmup',width:20}, {header:'Strikes / Buenas',key:'strikes',width:15}, {header:'Fouls',key:'fouls',width:10}
   ];
-  history.forEach(g=>(g.inningTotals||[]).forEach(i=>summary.addRow({
-    date:g.date,time:g.time||'',finalScore:g.finalScore||'',opponent:g.opponent,pitcher:g.pitcher,total:g.total,
-    inning:i.inning,pitches:i.pitches,balls:i.balls,strikes:i.strikes,fouls:i.fouls
+  history.forEach((g,gameIndex)=>(g.inningTotals||[]).forEach(i=>summary.addRow({
+    gameNo:gameIndex+1,date:g.date,time:g.time||'',finalScore:g.finalScore||'',opponent:g.opponent,pitcher:g.pitcher,gameField:g.gameField||'',tournamentName:g.tournamentName||'',total:((g.events||[]).length+getWarmupBreakdown(g.events||[]).total),
+    inning:i.inning,pitches:i.pitches,warmup:(g.warmupByInning?.[i.inning]??getWarmupBreakdown(g.events||[]).byInning[i.inning]??0),balls:i.balls,strikes:i.strikes,fouls:i.fouls
   })));
 
   const detail=workbook.addWorksheet('Lanzamientos');
   detail.columns=[
-    {header:'Fecha',key:'date',width:14}, {header:'Partido / Rival',key:'opponent',width:24}, {header:'Pitcher',key:'pitcher',width:19},
+    {header:'N.º Partido',key:'gameNo',width:12}, {header:'Fecha',key:'date',width:14}, {header:'Partido / Rival',key:'opponent',width:24}, {header:'Pitcher',key:'pitcher',width:19},
     {header:'Entrada (inning)',key:'inning',width:17}, {header:'Turno al bate',key:'turn',width:16}, {header:'N.º de pitcheo',key:'pitchNumber',width:17},
     {header:'Velocidad (mph)',key:'speed',width:18}, {header:'Hora',key:'time',width:12}, {header:'Resultado del lanzamiento',key:'type',width:28}
   ];
 
-  history.forEach(g=>{
+  history.forEach((g,gameIndex)=>{
     const events = getEventsWithTurns(g.events||[]);
     let lastInning = null, lastTurn = null;
 
     events.forEach((e)=>{
       const displayType = isStrike(e.type) ? 'Strike' : (e.type==='En juego'?'Hit del bateador':e.type);
       const row = detail.addRow({
-        date:g.date, opponent:g.opponent, pitcher:g.pitcher,
+        gameNo:gameIndex+1,date:g.date, opponent:g.opponent, pitcher:g.pitcher,
         inning:e.inning, turn:e.turn, pitchNumber:e.pitchNumber,
         speed: e.speed ? e.speed + ' mph' : '-',
         time:e.time||'', type:displayType
@@ -1354,15 +2221,15 @@ $('export').onclick=async()=>{
 
   const statsSheet=workbook.addWorksheet('Estadísticas');
   statsSheet.columns=[
-    {header:'Fecha',key:'date',width:14}, {header:'Hora',key:'time',width:10}, {header:'Resultado',key:'finalScore',width:14}, {header:'Partido / Rival',key:'opponent',width:25}, {header:'Pitcher',key:'pitcher',width:18},
+    {header:'N.º Partido',key:'gameNo',width:12}, {header:'Fecha',key:'date',width:14}, {header:'Hora',key:'time',width:10}, {header:'Resultado',key:'finalScore',width:14}, {header:'Partido / Rival',key:'opponent',width:25}, {header:'Pitcher',key:'pitcher',width:18}, {header:'Campo de juego',key:'gameField',width:22}, {header:'Torneo / Competición',key:'tournamentName',width:24},
     {header:'Velocidad Máx (mph)',key:'maxSpeed',width:20}, {header:'Velocidad Media (mph)',key:'avgSpeed',width:22},
-    {header:'Entradas Jugadas',key:'innings',width:16}, {header:'Turnos (Bateadores)',key:'turns',width:20}, {header:'Total Pitcheos',key:'total',width:16},
-    {header:'Strikes / Buenas',key:'strikes',width:16}, {header:'Fouls',key:'fouls',width:12}, {header:'Pelota en juego (Hits)',key:'hits',width:22},
+    {header:'Entradas Jugadas',key:'innings',width:16}, {header:'Turnos (Bateadores)',key:'turns',width:20}, {header:'Total Pitcheos',key:'total',width:16}, {header:'Comentario',key:'comment',width:40},
+    {header:'Warm-up entre inn.',key:'warmup',width:20}, {header:'Strikes / Buenas',key:'strikes',width:16}, {header:'Fouls',key:'fouls',width:12}, {header:'Pelota en juego (Hits)',key:'hits',width:22},
     {header:'Ponches (K)',key:'ks',width:14}, {header:'Bolas / Malas',key:'balls',width:14}, {header:'Jugador Golpeado (HBP)',key:'hbps',width:22},
     {header:'Bases por bola (BB)',key:'bbs',width:18}, {header:'% Strikes / Buenas',key:'pctStrikes',width:18}, {header:'Evolución vs. Media',key:'evoMedia',width:20}
   ];
 
-  history.forEach(g=>{
+  history.forEach((g,gameIndex)=>{
     const stats = getGameComputedStats(g.events||[], g.innings||{});
     const isSimple = g.mode === 'simple';
     const isBasic = g.mode === 'basic';
@@ -1378,10 +2245,10 @@ $('export').onclick=async()=>{
     }
 
     statsSheet.addRow({
-      date: g.date, time: g.time||'-', finalScore: g.finalScore||'-', opponent: g.opponent, pitcher: g.pitcher,
+      gameNo:gameIndex+1,date: g.date, time: g.time||'-', finalScore: g.finalScore||'-', opponent: g.opponent, pitcher: g.pitcher, gameField:g.gameField||'-', tournamentName:g.tournamentName||'-', comment:g.comment||'',
       maxSpeed: stats.maxSpeed > 0 ? stats.maxSpeed + ' mph' : '-',
       avgSpeed: stats.avgSpeed > 0 ? stats.avgSpeed + ' mph' : '-',
-      innings: stats.uniqueInnings, turns: isSimple || isBasic ? '-' : stats.totalTurns,
+      innings: stats.uniqueInnings, turns: isSimple || isBasic ? '-' : stats.totalTurns, warmup:stats.warmupPitches,
       total: stats.totalPitches, strikes: isSimple ? '-' : (isBasic ? stats.goodPitches : stats.strikes),
       fouls: isSimple || isBasic ? '-' : stats.fouls, hits: isSimple || isBasic ? '-' : stats.hits,
       ks: isSimple || isBasic ? '-' : stats.ks, balls: isSimple ? '-' : (isBasic ? stats.badPitches : stats.balls),
@@ -1392,6 +2259,12 @@ $('export').onclick=async()=>{
   });
 
   [summary, detail, statsSheet].forEach(ws=>{
+    let lastGameNo=null, band=0;
+    for(let r=2;r<=ws.rowCount;r++){
+      const row=ws.getRow(r); const gameCell=row.getCell(1); const gameNo=Number(gameCell.value||0);
+      if(gameNo && gameNo!==lastGameNo){ if(lastGameNo!==null) band++; lastGameNo=gameNo; }
+      if(gameNo && band%2===1) row.eachCell(cell=>{ if(!cell.fill || cell.fill.type!=='pattern' || cell.fill.fgColor?.argb==='FFFFFFFF') cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F6F0'}}; });
+    }
     ws.views=[{state:'frozen',ySplit:1}];
     ws.autoFilter={from:{row:1,column:1},to:{row:1,column:ws.columnCount}};
     ws.getRow(1).height=32;
@@ -1427,10 +2300,13 @@ $('saveSettings').onclick=()=>{
  localStorage.setItem('softbolPitcher',$('defaultPitcher').value.trim());
  const distVal = $('pitchingDistance').value || '13.1';
  localStorage.setItem('softbolDistance', distVal);
+ localStorage.setItem('softbolVideoFps', videoSettings.fpsMode);
+ localStorage.setItem('softbolVideoType', videoSettings.recordingType);
  $('pitcher').value=$('defaultPitcher').value.trim();
  state.pitcher=$('pitcher').value;
  saveCurrent();
- alert('Preferencias y distancia de lanzamiento guardadas.');
+ computeSpeedFromFrames();
+ alert('Preferencias, distancia y ajustes de grabación guardados.');
 };
 
 $('deleteAll').onclick=async()=>{

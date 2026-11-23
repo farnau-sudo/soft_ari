@@ -7,11 +7,11 @@
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Contador Ari V2">
+<meta name="apple-mobile-web-app-title" content="Contador Ari V3">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
 
-<title>Softball Pitch Tracker · V2 (Edición Ariadna Arnau)</title>
+<title>Softball Pitch Tracker · V3 (Edición Ariadna Arnau)</title>
 <style>
 :root{--green:#173c2d;--green2:#245a43;--lime:#d8f36a;--paper:#f5f7f2;--ink:#18251e;--muted:#66736a;--line:#dfe5dc;--red:#b63b35;--gold:#a66b0b;--purple:#7c3aed}
 *{box-sizing:border-box;touch-action:manipulation}
@@ -282,7 +282,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V2</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador de vídeo con zoom</p></div></header>
+<header><div class="wrap"><div class="eyebrow">Fastpitch · Cuaderno V3</div><h1>El contador de Ari</h1><p>Seguimiento personal + Analizador de vídeo con zoom</p></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Partido</button>
@@ -713,7 +713,7 @@ div[class*="tiiny"], div[id*="tiiny"], a[href*="tiiny"], iframe[src*="tiiny"], f
 </div>
 
 <footer>
- <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V2)</div>
+ <div class="footer-title">Softball Pitch Tracker · Edición Ariadna Arnau (V3)</div>
  <div class="footer-sub">Herramienta de control personal.</div>
  <div style="margin-top:4px">Creada por F. Arnau · Uso personal</div>
 </footer>
@@ -1970,6 +1970,8 @@ function getAtBatSequenceBreakdown(events){
   const strikesPct = pitches > 0 ? (strikes / pitches) * 100 : null;
   const allGoodPct = pitches > 0 ? (allGood / pitches) * 100 : null;
   const outcome = items.map(x => x.outcome).filter(Boolean).pop() || '-';
+  const ks = items.filter(x => x.outcome === 'K').length;
+  const bbs = items.filter(x => x.outcome === 'BB').length;
 
   list.push({
    seqIndex: idx,
@@ -1982,6 +1984,10 @@ function getAtBatSequenceBreakdown(events){
    foulsAndHits,
    allGood,
    ballsAndHbp,
+   ballsOnly: balls,
+   hits,
+   ks,
+   bbs,
    strikesPct,
    allGoodPct,
    outcome
@@ -1991,6 +1997,9 @@ function getAtBatSequenceBreakdown(events){
 }
 
 function analyzeInningSequence(evts, inningNum){
+ const withTurns = getEventsWithTurns(evts||[]);
+ const ks = withTurns.filter(x => x.outcome === 'K').length;
+ const bbs = withTurns.filter(x => x.outcome === 'BB').length;
  const sorted = [...(evts||[])].sort((a,b) => (a.num||0) - (b.num||0));
  const pitches = sorted.length;
  const strikes = sorted.filter(e => isGoodPitch(e.type)).length;
@@ -2049,8 +2058,11 @@ function analyzeInningSequence(evts, inningNum){
   balls,
   hbp,
   ballsAndHbp,
+  ballsOnly: balls,
   fouls,
   hits,
+  ks,
+  bbs,
   foulsAndHits,
   allGood,
   effPct,
@@ -2286,9 +2298,12 @@ function buildSvgEvolutionChart(points, opts){
  const n = points.length;
  if(!n) return '<div class="muted" style="padding:20px;text-align:center">No hay datos suficientes para esta métrica.</div>';
 
- const colW = Math.max(50, Math.min(76, Math.floor(540 / Math.max(n, 4))));
+ const isGrouped = Array.isArray(opts.groupedSeries) && opts.groupedSeries.length > 0;
+ const seriesCount = isGrouped ? opts.groupedSeries.length : 1;
+ const minColW = seriesCount >= 3 ? 68 : (seriesCount === 2 ? 58 : 50);
+ const colW = Math.max(minColW, Math.min(86, Math.floor(540 / Math.max(n, 4))));
  const width = Math.max(340, 56 + n * colW + 24);
- const height = 212;
+ const height = 216;
  const padTop = 24;
  const padBottom = 36;
  const padLeft = 42;
@@ -2296,14 +2311,23 @@ function buildSvgEvolutionChart(points, opts){
  const plotW = width - padLeft - padRight;
  const plotH = height - padTop - padBottom;
 
+ const allVals = [];
+ points.forEach(p => {
+  if(isGrouped){
+   opts.groupedSeries.forEach(s => allVals.push(Number(p[s.key]) || 0));
+  } else {
+   allVals.push(Number(p.value) || 0);
+  }
+ });
+
  const values = points.map(p => Number(p.value) || 0);
  const targetVal = (opts.targetVal !== null && opts.targetVal !== undefined && !Number.isNaN(Number(opts.targetVal))) ? Number(opts.targetVal) : null;
- const rawMax = Math.max(...values, opts.avgVal || 0, targetVal || 0, 1);
+ const rawMax = Math.max(...allVals, opts.avgVal || 0, targetVal || 0, 1);
  const maxVal = opts.isPercent ? 100 : Math.ceil(rawMax * 1.18);
 
  const yFor = v => padTop + plotH - (Math.max(0, v) / maxVal) * plotH;
  const xCenter = i => padLeft + (i + 0.5) * (plotW / n);
- const barWidth = Math.max(14, Math.min(28, (plotW / n) * 0.48));
+ const barWidth = Math.max(16, Math.min(30, (plotW / n) * 0.52));
 
  let svg = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${esc(opts.title)}">`;
 
@@ -2316,24 +2340,54 @@ function buildSvgEvolutionChart(points, opts){
   svg += `<text x="${padLeft - 6}" y="${(yPos + 3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#66736a" font-weight="700">${lbl}</text>`;
  });
 
+ const baseLineY = padTop + plotH;
+
  points.forEach((pt, idx) => {
   const cx = xCenter(idx);
-  const v = Number(pt.value) || 0;
-  const yBar = yFor(v);
-  const hBar = Math.max(2, (padTop + plotH) - yBar);
   const lowSample = typeof pt.sampleN === 'number' && pt.sampleN > 0 && pt.sampleN < 3;
-  const barColor = typeof opts.colorFn === 'function' ? opts.colorFn(pt, idx) : (opts.barColor || '#245a43');
-  const valText = opts.isPercent ? `${v.toFixed(0)}%` : `${v}`;
+  const opacityAttr = lowSample ? '0.62' : '0.95';
   const sampleBadge = typeof pt.sampleN === 'number' ? ` (n=${pt.sampleN})` : '';
 
-  svg += `<g><title>${esc((pt.title || pt.label) + ': ' + valText + sampleBadge)}</title>`;
-  svg += `<rect x="${(cx - barWidth / 2).toFixed(1)}" y="${yBar.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${hBar.toFixed(1)}" rx="5" fill="${barColor}" opacity="${lowSample ? '0.52' : '0.92'}"/>`;
-  svg += `<text x="${cx.toFixed(1)}" y="${Math.max(12, yBar - 4).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="#18251e">${esc(valText)}</text>`;
-  svg += `<text x="${cx.toFixed(1)}" y="${(height - 17).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="#66736a">${esc(pt.label)}</text>`;
-  if(typeof pt.sampleN === 'number'){
-   svg += `<text x="${cx.toFixed(1)}" y="${(height - 6).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${lowSample ? '#92400e' : '#66736a'}">n=${pt.sampleN}</text>`;
+  if(isGrouped){
+   const slotW = (plotW / n);
+   const gap = 3;
+   const subBarW = Math.max(10, Math.min(20, (slotW * 0.72 - gap * (seriesCount - 1)) / seriesCount));
+   const groupTotalW = seriesCount * subBarW + (seriesCount - 1) * gap;
+   const startX = cx - groupTotalW / 2;
+
+   const partsSummary = opts.groupedSeries.map(s => `${s.label}: ${Number(pt[s.key]) || 0}`).join(' · ');
+   svg += `<g><title>${esc((pt.title || pt.label) + ' — ' + partsSummary + sampleBadge)}</title>`;
+
+   opts.groupedSeries.forEach((s, sIdx) => {
+    const val = Number(pt[s.key]) || 0;
+    const bx = startX + sIdx * (subBarW + gap);
+    const by = yFor(val);
+    const bh = Math.max(2, baseLineY - by);
+    svg += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${subBarW.toFixed(1)}" height="${bh.toFixed(1)}" rx="3.5" fill="${s.color}" opacity="${opacityAttr}"/>`;
+    svg += `<text x="${(bx + subBarW / 2).toFixed(1)}" y="${Math.max(12, by - 3).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="800" fill="${s.color}">${esc(String(val))}</text>`;
+   });
+
+   svg += `<text x="${cx.toFixed(1)}" y="${(height - 17).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="#66736a">${esc(pt.label)}</text>`;
+   if(typeof pt.sampleN === 'number'){
+    svg += `<text x="${cx.toFixed(1)}" y="${(height - 6).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${lowSample ? '#92400e' : '#66736a'}">n=${pt.sampleN}</text>`;
+   }
+   svg += `</g>`;
+  } else {
+   const v = Number(pt.value) || 0;
+   const yBar = yFor(v);
+   const hBar = Math.max(2, baseLineY - yBar);
+   const barColor = typeof opts.colorFn === 'function' ? opts.colorFn(pt, idx) : (opts.barColor || '#245a43');
+   const valText = opts.isPercent ? `${v.toFixed(0)}%` : `${v}`;
+
+   svg += `<g><title>${esc((pt.title || pt.label) + ': ' + valText + sampleBadge)}</title>`;
+   svg += `<rect x="${(cx - barWidth / 2).toFixed(1)}" y="${yBar.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${hBar.toFixed(1)}" rx="5" fill="${barColor}" opacity="${lowSample ? '0.52' : '0.92'}"/>`;
+   svg += `<text x="${cx.toFixed(1)}" y="${Math.max(12, yBar - 4).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="#18251e">${esc(valText)}</text>`;
+   svg += `<text x="${cx.toFixed(1)}" y="${(height - 17).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="#66736a">${esc(pt.label)}</text>`;
+   if(typeof pt.sampleN === 'number'){
+    svg += `<text x="${cx.toFixed(1)}" y="${(height - 6).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${lowSample ? '#92400e' : '#66736a'}">n=${pt.sampleN}</text>`;
+   }
+   svg += `</g>`;
   }
-  svg += `</g>`;
  });
 
  // Línea objetivo
@@ -2343,13 +2397,13 @@ function buildSvgEvolutionChart(points, opts){
  }
 
  // Línea de media histórica / global
- if(opts.avgVal !== null && opts.avgVal !== undefined && !Number.isNaN(Number(opts.avgVal))){
+ if(!isGrouped && opts.avgVal !== null && opts.avgVal !== undefined && !Number.isNaN(Number(opts.avgVal))){
   const yAvg = yFor(Number(opts.avgVal));
   svg += `<line x1="${padLeft}" y1="${yAvg.toFixed(1)}" x2="${width - padRight}" y2="${yAvg.toFixed(1)}" stroke="#173c2d" stroke-width="1.6" stroke-dasharray="5,4"/>`;
  }
 
  // Línea de media móvil (últimos 3 puntos)
- if(n >= 2){
+ if(!isGrouped && n >= 2){
   const maCoords = [];
   for(let i = 0; i < n; i++){
    const slice = values.slice(Math.max(0, i - 2), i + 1);
@@ -2367,10 +2421,40 @@ function buildSvgEvolutionChart(points, opts){
  return `<div class="svg-chart-scroll">${svg}</div>`;
 }
 
+function getGoodBadPairFromRecord(rec){
+ if(!rec) return null;
+ const g = rec.allGood ?? rec.all_good_vol ?? null;
+ const b = rec.ballsAndHbp !== undefined ? rec.ballsAndHbp : (rec.ballsPlusHbp !== undefined ? rec.ballsPlusHbp : (rec.balls_hbp ?? null));
+ if(g === null || b === null) return null;
+ return { goodVal: Number(g) || 0, badVal: Number(b) || 0 };
+}
+
+function getKBBHitTripleFromRecord(rec){
+ if(!rec) return null;
+ const k = rec.ks ?? null;
+ const bb = rec.bbs ?? null;
+ const h = rec.hits ?? null;
+ if(k === null && bb === null && h === null) return null;
+ return { kVal: Number(k) || 0, bbVal: Number(bb) || 0, hitVal: Number(h) || 0 };
+}
+
 function getMetricValueFromRecord(rec, metric){
  if(!rec) return null;
+ if(metric === 'good_vs_bad'){
+  const pair = getGoodBadPairFromRecord(rec);
+  return pair ? (pair.goodVal + pair.badVal) : null;
+ }
+ if(metric === 'k_bb_hit'){
+  const tri = getKBBHitTripleFromRecord(rec);
+  return tri ? (tri.kVal + tri.bbVal + tri.hitVal) : null;
+ }
+ if(metric === 'strikeouts') return rec.ks ?? null;
+ if(metric === 'walks') return rec.bbs ?? null;
+ if(metric === 'hits_vol') return rec.hits ?? null;
  if(metric === 'strikes_pct') return rec.effPct ?? rec.strikes_pct ?? null;
  if(metric === 'all_good_pct') return rec.allGoodPct ?? rec.all_good_pct ?? null;
+ if(metric === 'bad_pct') return rec.badPct ?? rec.bad_pct ?? null;
+ if(metric === 'balls_pct') return rec.ballsPct ?? rec.balls_pct ?? null;
  if(metric === 'strikes_vol') return rec.strikes ?? rec.strikes_vol ?? null;
  if(metric === 'fouls_hits') return (rec.foulsAndHits !== undefined ? rec.foulsAndHits : (rec.foulsPlusHits !== undefined ? rec.foulsPlusHits : (rec.fouls_hits ?? null)));
  if(metric === 'all_good_vol') return rec.allGood ?? rec.all_good_vol ?? null;
@@ -2381,13 +2465,20 @@ function getMetricValueFromRecord(rec, metric){
 }
 
 function isPercentMetric(metric){
- return metric === 'strikes_pct' || metric === 'all_good_pct';
+ return metric === 'strikes_pct' || metric === 'all_good_pct' || metric === 'bad_pct' || metric === 'balls_pct';
 }
 
 function getMetricLabel(metric){
  const map = {
+  good_vs_bad: 'Buenas vs Malas',
+  k_bb_hit: 'Ponches / BB / Hits',
+  strikeouts: 'Ponches (K)',
+  walks: 'Bases por bola (BB)',
+  hits_vol: 'Hits',
   strikes_pct: '% Strikes',
   all_good_pct: '% Todo lo bueno (H+F+S)',
+  bad_pct: '% Todo lo malo (Bolas+HBP)',
+  balls_pct: '% Bolas (sin HBP)',
   strikes_vol: 'Strikes',
   fouls_hits: 'Fouls+Hits',
   all_good_vol: 'Todo lo bueno (H+F+S)',
@@ -2417,6 +2508,8 @@ function computeCareerAnalytics(){
  let effPitchesDenom = 0;
  let effGoodNum = 0;
  let allGoodNum = 0;
+ let badPitchNum = 0;
+ let normalBallNum = 0;
  let recordMaxSpeed = 0;
  let recordMaxSpeedGame = '';
  let allSpeeds = [];
@@ -2463,7 +2556,11 @@ function computeCareerAnalytics(){
      strikes: 0,
      foulsAndHits: 0,
      allGood: 0,
-     ballsAndHbp: 0
+     ballsAndHbp: 0,
+     ballsOnly: 0,
+     hits: 0,
+     ks: 0,
+     bbs: 0
     };
    }
    const ta = perTurnAgg[bNum];
@@ -2473,6 +2570,10 @@ function computeCareerAnalytics(){
    ta.foulsAndHits += ab.foulsAndHits;
    ta.allGood += ab.allGood;
    ta.ballsAndHbp += ab.ballsAndHbp;
+   ta.ballsOnly += (ab.ballsOnly ?? ab.ballsAndHbp);
+   ta.hits += (ab.hits || 0);
+   ta.ks += (ab.ks || 0);
+   ta.bbs += (ab.bbs || 0);
   });
 
   // Agregar por número de entrada (1.ª, 2.ª, 3.ª...) en todos los partidos
@@ -2485,8 +2586,12 @@ function computeCareerAnalytics(){
      pitches: 0,
      strikes: 0,
      ballsAndHbp: 0,
+     ballsOnly: 0,
      foulsAndHits: 0,
      allGood: 0,
+     hits: 0,
+     ks: 0,
+     bbs: 0,
      maxBallsStreak: 0,
      maxStrikesStreak: 0,
      startsWith2PlusBalls: 0
@@ -2497,8 +2602,12 @@ function computeCareerAnalytics(){
    agg.pitches += r.pitches;
    agg.strikes += r.strikes;
    agg.ballsAndHbp += r.ballsAndHbp;
+   agg.ballsOnly += (r.ballsOnly ?? r.ballsAndHbp);
    agg.foulsAndHits += r.foulsAndHits;
    agg.allGood += r.allGood;
+   agg.hits += (r.hits || 0);
+   agg.ks += (r.ks || 0);
+   agg.bbs += (r.bbs || 0);
    agg.maxBallsStreak = Math.max(agg.maxBallsStreak, r.maxBallsStreak);
    agg.maxStrikesStreak = Math.max(agg.maxStrikesStreak, r.maxStrikesStreak);
    if(r.first3Balls >= 2) agg.startsWith2PlusBalls++;
@@ -2515,11 +2624,19 @@ function computeCareerAnalytics(){
 
   let effPct = null;
   let allGoodPct = null;
+  let badPct = null;
+  let ballsPct = null;
   if(!isSimple && s.actualPitches > 0){
    const good = isBasic ? s.goodPitches : s.strikes;
    const allG = isBasic ? s.goodPitches : s.allGood;
    effPct = (good / s.actualPitches) * 100;
    allGoodPct = (allG / s.actualPitches) * 100;
+   const badCount = isBasic ? s.badPitches : (s.balls + s.hbps);
+   const ballCount = isBasic ? s.badPitches : s.balls;
+   badPct = (badCount / s.actualPitches) * 100;
+   ballsPct = (ballCount / s.actualPitches) * 100;
+   badPitchNum += badCount;
+   normalBallNum += ballCount;
    effPitchesDenom += s.actualPitches;
    effGoodNum += good;
    allGoodNum += allG;
@@ -2552,6 +2669,8 @@ function computeCareerAnalytics(){
    hits: isSimple ? null : s.hits,
    effPct,
    allGoodPct,
+   badPct,
+   ballsPct,
    maxSpeed: s.maxSpeed,
    avgSpeed: s.avgSpeed
   };
@@ -2559,6 +2678,8 @@ function computeCareerAnalytics(){
 
  const globalEffPct = effPitchesDenom > 0 ? (effGoodNum / effPitchesDenom) * 100 : 0;
  const globalAllGoodPct = effPitchesDenom > 0 ? (allGoodNum / effPitchesDenom) * 100 : 0;
+ const globalBadPct = effPitchesDenom > 0 ? (badPitchNum / effPitchesDenom) * 100 : 0;
+ const globalBallsPct = effPitchesDenom > 0 ? (normalBallNum / effPitchesDenom) * 100 : 0;
  const avgPitchesPerGame = totalGames > 0 ? (totalPitches / totalGames) : 0;
  const avgKsPerGame = totalGames > 0 ? (totalKs / totalGames) : 0;
  const kPerBbRatio = totalBBs > 0 ? (totalKs / totalBBs) : (totalKs > 0 ? totalKs : 0);
@@ -2586,8 +2707,13 @@ function computeCareerAnalytics(){
    foulsAndHits: Number((a.foulsAndHits / a.sampleN).toFixed(1)),
    allGood: Number((a.allGood / a.sampleN).toFixed(1)),
    ballsAndHbp: Number((a.ballsAndHbp / a.sampleN).toFixed(1)),
+   hits: Number((a.hits / a.sampleN).toFixed(2)),
+   ks: Number((a.ks / a.sampleN).toFixed(2)),
+   bbs: Number((a.bbs / a.sampleN).toFixed(2)),
    effPct: a.pitches > 0 ? Number(((a.strikes / a.pitches) * 100).toFixed(1)) : 0,
-   allGoodPct: a.pitches > 0 ? Number(((a.allGood / a.pitches) * 100).toFixed(1)) : 0
+   allGoodPct: a.pitches > 0 ? Number(((a.allGood / a.pitches) * 100).toFixed(1)) : 0,
+   badPct: a.pitches > 0 ? Number(((a.ballsAndHbp / a.pitches) * 100).toFixed(1)) : 0,
+   ballsPct: a.pitches > 0 ? Number(((a.ballsOnly / a.pitches) * 100).toFixed(1)) : 0
   };
  });
 
@@ -2604,8 +2730,13 @@ function computeCareerAnalytics(){
    avgFoulsAndHits: a.foulsAndHits / a.gamesCount,
    foulsAndHits: Number((a.foulsAndHits / a.gamesCount).toFixed(1)),
    allGood: Number((a.allGood / a.gamesCount).toFixed(1)),
+   hits: Number((a.hits / a.gamesCount).toFixed(1)),
+   ks: Number((a.ks / a.gamesCount).toFixed(1)),
+   bbs: Number((a.bbs / a.gamesCount).toFixed(1)),
    effPct: a.pitches > 0 ? Number(((a.strikes / a.pitches) * 100).toFixed(1)) : 0,
-   allGoodPct: a.pitches > 0 ? Number(((a.allGood / a.pitches) * 100).toFixed(1)) : 0
+   allGoodPct: a.pitches > 0 ? Number(((a.allGood / a.pitches) * 100).toFixed(1)) : 0,
+   badPct: a.pitches > 0 ? Number(((a.ballsAndHbp / a.pitches) * 100).toFixed(1)) : 0,
+   ballsPct: a.pitches > 0 ? Number(((a.ballsOnly / a.pitches) * 100).toFixed(1)) : 0
   };
  });
 
@@ -2636,7 +2767,7 @@ function computeCareerAnalytics(){
  return {
   totalGames, totalPitches, actualPitches, warmupPitches, totalInnings, totalTurns,
   totalKs, totalBBs, totalStrikes, totalBalls, totalFouls, totalHits, totalHBPs, totalAllGood,
-  globalEffPct, globalAllGoodPct, avgPitchesPerGame, avgKsPerGame, kPerBbRatio,
+  globalEffPct, globalAllGoodPct, globalBadPct, globalBallsPct, avgPitchesPerGame, avgKsPerGame, kPerBbRatio,
   recordMaxSpeed, recordMaxSpeedGame, globalAvgSpeed,
   series, validEffGames, recentTrendDiff, bestGames,
   perTurnSeries, perInningSeries, inningPatternSummary
@@ -2676,35 +2807,49 @@ function renderCareerStats(){
  let barColor = '#245a43';
  let subtitleHtml = '';
 
+ const mapRecordToPt = (x, labelStr, titleStr, sampleNVal) => {
+  const pair = getGoodBadPairFromRecord(x) || {};
+  const tri = getKBBHitTripleFromRecord(x) || {};
+  return {
+   label: labelStr,
+   sampleN: sampleNVal,
+   value: getMetricValueFromRecord(x, careerChartMetric),
+   goodVal: pair.goodVal,
+   badVal: pair.badVal,
+   kVal: tri.kVal,
+   bbVal: tri.bbVal,
+   hitVal: tri.hitVal,
+   title: titleStr
+  };
+ };
+
  if(careerChartGrouping === 'turn'){
   pts = c.perTurnSeries
    .filter(x => getMetricValueFromRecord(x, careerChartMetric) !== null)
-   .map(x => ({
-    label: x.label,
-    sampleN: x.sampleN,
-    value: getMetricValueFromRecord(x, careerChartMetric),
-    title: `${x.label} · ${getMetricLabel(careerChartMetric)}`
-   }));
-  subtitleHtml = `Evolución por turno al bate en orden desde el inicio del partido (B1, B2, B3...) para ver el cansancio a lo largo del juego (n = partidos con ese turno).`;
+   .map(x => mapRecordToPt(x, x.label, `${x.label} · ${getMetricLabel(careerChartMetric)}`, x.sampleN));
+  subtitleHtml = careerChartMetric === 'good_vs_bad'
+   ? `Barras paralelas de bolas buenas (verde: H+F+S) y malas (rojo: Bolas+HBP) por turno al bate (B1, B2...).`
+   : (careerChartMetric === 'k_bb_hit'
+    ? `Comparativa paralela de Ponches (morado), Bases por bola (ámbar) y Hits (azul) por turno al bate.`
+    : `Evolución por turno al bate en orden desde el inicio del partido (B1, B2, B3...) (n = partidos con ese turno).`);
  } else if(careerChartGrouping === 'inning'){
   pts = c.perInningSeries
    .filter(x => getMetricValueFromRecord(x, careerChartMetric) !== null)
-   .map(x => ({
-    label: `Inn ${x.inning}`,
-    sampleN: x.gamesCount,
-    value: getMetricValueFromRecord(x, careerChartMetric),
-    title: `Entrada ${x.inning} · ${getMetricLabel(careerChartMetric)}`
-   }));
-  subtitleHtml = `Media por entrada (1.ª, 2.ª...). Sin warm-up (sí cuenta en el total). Muestra n = partidos con esa entrada.`;
+   .map(x => mapRecordToPt(x, `Inn ${x.inning}`, `Entrada ${x.inning} · ${getMetricLabel(careerChartMetric)}`, x.gamesCount));
+  subtitleHtml = careerChartMetric === 'good_vs_bad'
+   ? `Barras paralelas de bolas buenas (verde: H+F+S) y malas (rojo: Bolas+HBP) por entrada. Sin warm-up.`
+   : (careerChartMetric === 'k_bb_hit'
+    ? `Comparativa paralela de Ponches (morado), Bases por bola (ámbar) y Hits (azul) por entrada.`
+    : `Media por entrada (1.ª, 2.ª...). Sin warm-up (sí cuenta en el total). Muestra n = partidos con esa entrada.`);
  } else {
   pts = rangeFilteredSeries
    .filter(x => getMetricValueFromRecord(x, careerChartMetric) !== null)
-   .map(x => ({
-    label: `P${x.index}`,
-    value: getMetricValueFromRecord(x, careerChartMetric),
-    title: `${x.date} · ${x.matchName}`
-   }));
-  subtitleHtml = `Evolución partido a partido de ${getMetricLabel(careerChartMetric)} con media histórica y media móvil de 3 puntos.`;
+   .map(x => mapRecordToPt(x, `P${x.index}`, `${x.date} · ${x.matchName}`, undefined));
+  subtitleHtml = careerChartMetric === 'good_vs_bad'
+   ? `Comparativa lado a lado de bolas buenas (verde: H+F+S) y bolas malas (rojo: Bolas+HBP) en cada partido.`
+   : (careerChartMetric === 'k_bb_hit'
+    ? `Comparativa lado a lado de Ponches (K), Bases por bola (BB) y Hits en cada partido.`
+    : `Evolución partido a partido de ${getMetricLabel(careerChartMetric)} con media histórica y media móvil de 3 puntos.`);
  }
 
  const isPct = isPercentMetric(careerChartMetric);
@@ -2712,27 +2857,48 @@ function renderCareerStats(){
   avgLineVal = pts.reduce((acc, p) => acc + (Number(p.value) || 0), 0) / pts.length;
   if(careerChartGrouping === 'game' && careerChartMetric === 'strikes_pct') avgLineVal = c.globalEffPct;
   if(careerChartGrouping === 'game' && careerChartMetric === 'all_good_pct') avgLineVal = c.globalAllGoodPct;
+  if(careerChartGrouping === 'game' && careerChartMetric === 'bad_pct') avgLineVal = c.globalBadPct;
+  if(careerChartGrouping === 'game' && careerChartMetric === 'balls_pct') avgLineVal = c.globalBallsPct;
  }
 
  if(isPct && (careerChartMetric === 'all_good_pct' || careerChartMetric === 'strikes_pct')){
   targetLineVal = targetPct;
  }
 
- if(careerChartMetric === 'balls_hbp') barColor = '#d97706';
- else if(careerChartMetric === 'fouls_hits') barColor = '#0284c7';
+ if(careerChartMetric === 'balls_hbp' || careerChartMetric === 'walks') barColor = '#d97706';
+ else if(careerChartMetric === 'fouls_hits' || careerChartMetric === 'hits_vol') barColor = '#0284c7';
+ else if(careerChartMetric === 'strikeouts') barColor = '#7c3aed';
  else if(careerChartMetric === 'all_good_vol' || careerChartMetric === 'all_good_pct') barColor = '#059669';
+ else if(careerChartMetric === 'bad_pct' || careerChartMetric === 'balls_pct') barColor = '#dc2626';
  else if(careerChartMetric === 'total_pitches' || careerChartMetric === 'pitches_per_inn_no_warmup') barColor = '#173c2d';
+
+ let groupedSeries = null;
+ if(careerChartMetric === 'good_vs_bad'){
+  groupedSeries = [
+   { key: 'goodVal', label: 'Buenas (H+F+S)', color: '#059669' },
+   { key: 'badVal', label: 'Malas (Bolas+HBP)', color: '#dc2626' }
+  ];
+ } else if(careerChartMetric === 'k_bb_hit'){
+  groupedSeries = [
+   { key: 'kVal', label: 'Ponches (K)', color: '#7c3aed' },
+   { key: 'bbVal', label: 'Bases x bola (BB)', color: '#d97706' },
+   { key: 'hitVal', label: 'Hits', color: '#0284c7' }
+  ];
+ }
 
  const chartHtml = buildSvgEvolutionChart(pts, {
   title: `${getMetricLabel(careerChartMetric)} (${careerChartGrouping})`,
   isPercent: isPct,
-  avgVal: avgLineVal,
-  targetVal: targetLineVal,
+  groupedSeries,
+  avgVal: groupedSeries ? null : avgLineVal,
+  targetVal: groupedSeries ? null : targetLineVal,
   barColor,
   colorFn: isPct ? (pt => pt.value >= (avgLineVal || 0) ? '#15803d' : '#c2410c') : null
  });
 
- const legendHtml = `
+ const legendHtml = groupedSeries
+  ? groupedSeries.map(s => `<span class="legend-item"><span class="legend-swatch" style="background:${s.color}"></span>${esc(s.label)}</span>`).join('')
+  : `
   <span class="legend-item"><span class="legend-swatch" style="background:${barColor}"></span>${esc(getMetricLabel(careerChartMetric))}</span>
   ${avgLineVal !== null ? `<span class="legend-item"><span class="legend-line" style="background:#173c2d"></span>Media (${isPct ? avgLineVal.toFixed(1)+'%' : avgLineVal.toFixed(1)})</span>` : ''}
   ${targetLineVal !== null ? `<span class="legend-item"><span class="legend-line" style="background:#059669"></span>Objetivo (${targetLineVal}%)</span>` : ''}
@@ -2771,6 +2937,8 @@ function renderCareerStats(){
     <div class="career-kpi"><strong>${c.totalPitches}</strong><span>Pitcheos Totales</span><small>${c.actualPitches} juego + ${c.warmupPitches} warm</small></div>
     <div class="career-kpi"><strong>${c.avgPitchesPerGame.toFixed(1)}</strong><span>Media / Partido</span><small>${c.totalInnings} entradas</small></div>
     <div class="career-kpi"><strong>${c.globalEffPct.toFixed(1)}%</strong><span>% Strikes</span><small>Todo bueno: ${c.globalAllGoodPct.toFixed(1)}%</small></div>
+    <div class="career-kpi"><strong>${c.globalBadPct.toFixed(1)}%</strong><span>% Todo lo malo</span><small>Bolas + golpeadas (HBP)</small></div>
+    <div class="career-kpi"><strong>${c.globalBallsPct.toFixed(1)}%</strong><span>% Bolas sin HBP</span><small>Solo bolas registradas</small></div>
     <div class="career-kpi"><strong>${c.totalKs}</strong><span>Ponchados (K)</span><small>${c.avgKsPerGame.toFixed(1)} K / partido</small></div>
     <div class="career-kpi"><strong>${c.totalBBs}</strong><span>Bases x Bola</span><small>Ratio K/BB: ${c.kPerBbRatio.toFixed(2)}</small></div>
     <div class="career-kpi"><strong>${c.recordMaxSpeed > 0 ? c.recordMaxSpeed + ' mph' : '--'}</strong><span>Récord Velocidad</span><small>${c.globalAvgSpeed > 0 ? 'Media: ' + c.globalAvgSpeed.toFixed(1) + ' mph' : 'Sin vídeo medido'}</small></div>
@@ -2789,11 +2957,18 @@ function renderCareerStats(){
 
    <div class="chart-toolbar">
     <div class="chart-mode-pills" style="flex-wrap:wrap">
+     <button type="button" class="chart-pill ${careerChartMetric==='good_vs_bad'?'active':''}" data-metric="good_vs_bad">🟢🔴 Buenas vs Malas</button>
+     <button type="button" class="chart-pill ${careerChartMetric==='k_bb_hit'?'active':''}" data-metric="k_bb_hit">🎯 K / BB / Hits</button>
+     <button type="button" class="chart-pill ${careerChartMetric==='strikeouts'?'active':''}" data-metric="strikeouts">Ponches (K)</button>
+     <button type="button" class="chart-pill ${careerChartMetric==='walks'?'active':''}" data-metric="walks">Bases x bola (BB)</button>
+     <button type="button" class="chart-pill ${careerChartMetric==='hits_vol'?'active':''}" data-metric="hits_vol">Hits</button>
      <button type="button" class="chart-pill ${careerChartMetric==='strikes_pct'?'active':''}" data-metric="strikes_pct">% Strikes</button>
      <button type="button" class="chart-pill ${careerChartMetric==='strikes_vol'?'active':''}" data-metric="strikes_vol">Strikes</button>
      <button type="button" class="chart-pill ${careerChartMetric==='fouls_hits'?'active':''}" data-metric="fouls_hits">Fouls+Hits</button>
      <button type="button" class="chart-pill ${careerChartMetric==='all_good_vol'?'active':''}" data-metric="all_good_vol">Todo lo bueno (H+F+S)</button>
      <button type="button" class="chart-pill ${careerChartMetric==='all_good_pct'?'active':''}" data-metric="all_good_pct">% Todo lo bueno</button>
+     <button type="button" class="chart-pill ${careerChartMetric==='bad_pct'?'active':''}" data-metric="bad_pct">% Todo lo malo</button>
+     <button type="button" class="chart-pill ${careerChartMetric==='balls_pct'?'active':''}" data-metric="balls_pct">% Bolas sin HBP</button>
      <button type="button" class="chart-pill ${careerChartMetric==='balls_hbp'?'active':''}" data-metric="balls_hbp">Bolas+Golpeados</button>
      <button type="button" class="chart-pill ${careerChartMetric==='total_pitches'?'active':''}" data-metric="total_pitches">Total pitcheos</button>
      <button type="button" class="chart-pill ${careerChartMetric==='pitches_per_inn_no_warmup'?'active':''}" data-metric="pitches_per_inn_no_warmup">Pitcheos/inn</button>
@@ -2900,10 +3075,15 @@ function renderMatchDetailHtml(g){
   label: `Inn ${r.inning}`,
   strikes_pct: r.effPct,
   all_good_pct: r.allGoodPct,
+  bad_pct: r.pitches > 0 ? (r.ballsAndHbp / r.pitches) * 100 : null,
+  balls_pct: r.pitches > 0 ? (r.ballsOnly / r.pitches) * 100 : null,
   strikes_vol: r.strikes,
   fouls_hits: r.foulsAndHits,
   all_good_vol: r.allGood,
   balls_hbp: r.ballsAndHbp,
+  hits: r.hits,
+  ks: r.ks,
+  bbs: r.bbs,
   total_pitches: r.pitches,
   pitches_per_inn_no_warmup: r.pitches
  }));
@@ -2913,10 +3093,15 @@ function renderMatchDetailHtml(g){
   fullLabel: ab.fullLabel,
   strikes_pct: ab.strikesPct,
   all_good_pct: ab.allGoodPct,
+  bad_pct: ab.pitches > 0 ? (ab.ballsAndHbp / ab.pitches) * 100 : null,
+  balls_pct: ab.pitches > 0 ? (ab.ballsOnly / ab.pitches) * 100 : null,
   strikes_vol: ab.strikes,
   fouls_hits: ab.foulsAndHits,
   all_good_vol: ab.allGood,
   balls_hbp: ab.ballsAndHbp,
+  hits: ab.hits,
+  ks: ab.ks,
+  bbs: ab.bbs,
   total_pitches: ab.pitches,
   pitches_per_inn_no_warmup: ab.pitches
  }));
@@ -2927,31 +3112,61 @@ function renderMatchDetailHtml(g){
   fullLabel: g.homeTeam ? `${g.homeTeam} vs ${g.awayTeam}` : (g.opponent || 'Partido'),
   strikes_pct: stats.actualPitches > 0 ? ((isGameBasic ? stats.goodPitches : stats.strikes) / stats.actualPitches) * 100 : null,
   all_good_pct: stats.actualPitches > 0 ? (stats.allGood / stats.actualPitches) * 100 : null,
+  bad_pct: stats.actualPitches > 0 ? ((isGameBasic ? stats.badPitches : (stats.balls + stats.hbps)) / stats.actualPitches) * 100 : null,
+  balls_pct: stats.actualPitches > 0 ? ((isGameBasic ? stats.badPitches : stats.balls) / stats.actualPitches) * 100 : null,
   strikes_vol: isGameBasic ? stats.goodPitches : stats.strikes,
   fouls_hits: stats.fouls + stats.hits,
   all_good_vol: stats.allGood,
   balls_hbp: isGameBasic ? stats.badPitches : (stats.balls + stats.hbps),
+  hits: stats.hits,
+  ks: stats.ks,
+  bbs: stats.bbs,
   total_pitches: stats.totalPitches,
   pitches_per_inn_no_warmup: stats.pitchesPerInningNoWarmup
  };
  const activeRecs = dState.grouping === 'inning' ? inningRecords : (dState.grouping === 'game' ? [matchTotalRecord] : turnRecords);
  const pts = activeRecs
   .filter(r => getMetricValueFromRecord(r, dState.metric) !== null)
-  .map(r => ({
-   label: r.label,
-   value: getMetricValueFromRecord(r, dState.metric),
-   title: `${r.fullLabel || r.label} · ${getMetricLabel(dState.metric)}`
-  }));
+  .map(r => {
+   const pair = getGoodBadPairFromRecord(r) || {};
+   const tri = getKBBHitTripleFromRecord(r) || {};
+   return {
+    label: r.label,
+    value: getMetricValueFromRecord(r, dState.metric),
+    goodVal: pair.goodVal,
+    badVal: pair.badVal,
+    kVal: tri.kVal,
+    bbVal: tri.bbVal,
+    hitVal: tri.hitVal,
+    title: `${r.fullLabel || r.label} · ${getMetricLabel(dState.metric)}`
+   };
+  });
 
  const isPct = isPercentMetric(dState.metric);
  const avgVal = pts.length ? (pts.reduce((a,b)=>a+(Number(b.value)||0),0) / pts.length) : null;
- const tgtVal = isPct ? targetPct : null;
+ const tgtVal = (dState.metric === 'strikes_pct' || dState.metric === 'all_good_pct') ? targetPct : null;
 
  let barColor = '#245a43';
- if(dState.metric === 'balls_hbp') barColor = '#d97706';
- else if(dState.metric === 'fouls_hits') barColor = '#0284c7';
+ if(dState.metric === 'balls_hbp' || dState.metric === 'walks') barColor = '#d97706';
+ else if(dState.metric === 'fouls_hits' || dState.metric === 'hits_vol') barColor = '#0284c7';
+ else if(dState.metric === 'strikeouts') barColor = '#7c3aed';
  else if(dState.metric === 'all_good_vol' || dState.metric === 'all_good_pct') barColor = '#059669';
+ else if(dState.metric === 'bad_pct' || dState.metric === 'balls_pct') barColor = '#dc2626';
  else if(dState.metric === 'total_pitches' || dState.metric === 'pitches_per_inn_no_warmup') barColor = '#173c2d';
+
+ let detailGroupedSeries = null;
+ if(dState.metric === 'good_vs_bad'){
+  detailGroupedSeries = [
+   { key: 'goodVal', label: 'Buenas (H+F+S)', color: '#059669' },
+   { key: 'badVal', label: 'Malas (Bolas+HBP)', color: '#dc2626' }
+  ];
+ } else if(dState.metric === 'k_bb_hit'){
+  detailGroupedSeries = [
+   { key: 'kVal', label: 'Ponches (K)', color: '#7c3aed' },
+   { key: 'bbVal', label: 'Bases x bola (BB)', color: '#d97706' },
+   { key: 'hitVal', label: 'Hits', color: '#0284c7' }
+  ];
+ }
 
  const chartNote = dState.metric === 'pitches_per_inn_no_warmup'
   ? 'Sin warm-up (sí cuenta en el total).'
@@ -2970,11 +3185,18 @@ function renderMatchDetailHtml(g){
     </div>
    </div>
    <div class="chart-mode-pills" style="flex-wrap:wrap;margin-bottom:6px">
+    <button type="button" class="chart-pill ${dState.metric==='good_vs_bad'?'active':''}" data-dmetric="good_vs_bad" data-gid="${g.id}">🟢🔴 Buenas vs Malas</button>
+    <button type="button" class="chart-pill ${dState.metric==='k_bb_hit'?'active':''}" data-dmetric="k_bb_hit" data-gid="${g.id}">🎯 K / BB / Hits</button>
+    <button type="button" class="chart-pill ${dState.metric==='strikeouts'?'active':''}" data-dmetric="strikeouts" data-gid="${g.id}">Ponches (K)</button>
+    <button type="button" class="chart-pill ${dState.metric==='walks'?'active':''}" data-dmetric="walks" data-gid="${g.id}">Bases x bola (BB)</button>
+    <button type="button" class="chart-pill ${dState.metric==='hits_vol'?'active':''}" data-dmetric="hits_vol" data-gid="${g.id}">Hits</button>
     <button type="button" class="chart-pill ${dState.metric==='strikes_pct'?'active':''}" data-dmetric="strikes_pct" data-gid="${g.id}">% Strikes</button>
     <button type="button" class="chart-pill ${dState.metric==='strikes_vol'?'active':''}" data-dmetric="strikes_vol" data-gid="${g.id}">Strikes</button>
     <button type="button" class="chart-pill ${dState.metric==='fouls_hits'?'active':''}" data-dmetric="fouls_hits" data-gid="${g.id}">Fouls+Hits</button>
     <button type="button" class="chart-pill ${dState.metric==='all_good_vol'?'active':''}" data-dmetric="all_good_vol" data-gid="${g.id}">Todo lo bueno (H+F+S)</button>
     <button type="button" class="chart-pill ${dState.metric==='all_good_pct'?'active':''}" data-dmetric="all_good_pct" data-gid="${g.id}">% Todo lo bueno</button>
+    <button type="button" class="chart-pill ${dState.metric==='bad_pct'?'active':''}" data-dmetric="bad_pct" data-gid="${g.id}">% Todo lo malo</button>
+    <button type="button" class="chart-pill ${dState.metric==='balls_pct'?'active':''}" data-dmetric="balls_pct" data-gid="${g.id}">% Bolas sin HBP</button>
     <button type="button" class="chart-pill ${dState.metric==='balls_hbp'?'active':''}" data-dmetric="balls_hbp" data-gid="${g.id}">Bolas+Golpeados</button>
     <button type="button" class="chart-pill ${dState.metric==='total_pitches'?'active':''}" data-dmetric="total_pitches" data-gid="${g.id}">Total pitcheos</button>
     <button type="button" class="chart-pill ${dState.metric==='pitches_per_inn_no_warmup'?'active':''}" data-dmetric="pitches_per_inn_no_warmup" data-gid="${g.id}">Pitcheos/inn</button>
@@ -2983,11 +3205,13 @@ function renderMatchDetailHtml(g){
    ${buildSvgEvolutionChart(pts, {
     title: 'Evolución del partido',
     isPercent: isPct,
-    avgVal,
-    targetVal: tgtVal,
+    groupedSeries: detailGroupedSeries,
+    avgVal: detailGroupedSeries ? null : avgVal,
+    targetVal: detailGroupedSeries ? null : tgtVal,
     barColor,
     colorFn: isPct ? (pt => pt.value >= (avgVal || 0) ? '#15803d' : '#c2410c') : null
    })}
+   ${detailGroupedSeries ? `<div class="chart-legend" style="margin-bottom:6px">${detailGroupedSeries.map(s => `<span class="legend-item"><span class="legend-swatch" style="background:${s.color}"></span>${esc(s.label)}</span>`).join('')}</div>` : ''}
    <div class="insight-box"><b>Lectura del partido:</b> ${esc(intra.diagnosis)}</div>
   </div>
  `;
@@ -3073,6 +3297,10 @@ function renderHistory(){
    }
   }
 
+  let kBadge = '';
+  if(!isSimple && !isBasic){
+   kBadge = `<div style="margin-top:4px;font-size:12px;font-weight:800;color:#4d328a">🎯 Ponches (K): ${stats.ks}</div>`;
+  }
   let speedBadge = stats.maxSpeed > 0 ? `<div style="margin-top:4px;font-size:12px;font-weight:700;color:#6b21a8">⚡ Velocidad Máx: ${stats.maxSpeed} mph (Med: ${stats.avgSpeed} mph)</div>` : '';
   let scoreBadge = g.finalScore ? `<div style="margin-top:4px;font-size:13px;font-weight:800;color:var(--green)">🏆 Resultado final: ${esc(g.finalScore)}</div>` : '';
   let gameMeta = [g.gameField ? `📍 Campo: ${esc(g.gameField)}` : '', g.tournamentName ? `🏆 Torneo: ${esc(g.tournamentName)}` : ''].filter(Boolean).join(' &nbsp;·&nbsp; ');
@@ -3099,6 +3327,7 @@ function renderHistory(){
       ${gameMeta ? `<span>${gameMeta}</span>` : ''}
       ${scoreBadge}
       ${evoHtml}
+      ${kBadge}
       ${speedBadge}
      </div>
      <div style="display:flex;gap:6px">

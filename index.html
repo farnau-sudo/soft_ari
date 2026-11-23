@@ -2450,15 +2450,14 @@ function computeCareerAnalytics(){
    totalAllGood += isBasic ? s.goodPitches : s.allGood;
   }
 
-  // Agregar por número de turno dentro de cada entrada (T1, T2, T3...):
-  // el Turno 1 es siempre el primer bateador al iniciar/descansar en una entrada (sea Inn 1, Inn 3, etc.)
+  // Agregar por orden cronológico de turno al bate desde el inicio del partido (B1, B2, B3...)
   atBats.forEach(ab => {
    if(ab.pitches <= 0) return;
-   const tNum = Number(ab.turn) || 1;
-   if(!perTurnAgg[tNum]){
-    perTurnAgg[tNum] = {
-     turnIndex: tNum,
-     label: `T${tNum}`,
+   const bNum = ab.seqIndex;
+   if(!perTurnAgg[bNum]){
+    perTurnAgg[bNum] = {
+     turnIndex: bNum,
+     label: `B${bNum}`,
      sampleN: 0,
      pitches: 0,
      strikes: 0,
@@ -2467,7 +2466,7 @@ function computeCareerAnalytics(){
      ballsAndHbp: 0
     };
    }
-   const ta = perTurnAgg[tNum];
+   const ta = perTurnAgg[bNum];
    ta.sampleN++;
    ta.pitches += ab.pitches;
    ta.strikes += ab.strikes;
@@ -2686,7 +2685,7 @@ function renderCareerStats(){
     value: getMetricValueFromRecord(x, careerChartMetric),
     title: `${x.label} · ${getMetricLabel(careerChartMetric)}`
    }));
-  subtitleHtml = `Media por turno de cada entrada (T1, T2, T3...): T1 siempre parte descansada al iniciar entrada (Inn 1, Inn 3, etc.). n = turnos registrados.`;
+  subtitleHtml = `Evolución por turno al bate en orden desde el inicio del partido (B1, B2, B3...) para ver el cansancio a lo largo del juego (n = partidos con ese turno).`;
  } else if(careerChartGrouping === 'inning'){
   pts = c.perInningSeries
    .filter(x => getMetricValueFromRecord(x, careerChartMetric) !== null)

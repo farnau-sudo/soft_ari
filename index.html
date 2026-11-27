@@ -3370,27 +3370,54 @@ function renderHistory(){
  });
 }
 
-$('exportBackupBtn').onclick = () => {
- const backupData = {
-  version: 2,
-  exportDate: new Date().toISOString(),
-  pitcher: localStorage.getItem('softbolPitcher') || '',
-  distance: localStorage.getItem('softbolDistance') || '13.1',
-  targetPct: String(getTargetGoodPct()),
-  videoFps: videoSettings.fpsMode,
-  videoType: videoSettings.recordingType,
-  allowMidChange: localStorage.getItem('softbolAllowMidChange') || 'false',
-  keepAwake: localStorage.getItem('softbolKeepAwake') || 'false',
-  history: history,
-  current: state
- };
- const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
- const downloadAnchor = document.createElement('a');
- downloadAnchor.setAttribute("href", dataStr);
- downloadAnchor.setAttribute("download", `copia-seguridad-softbol-v2-${today()}.json`);
- document.body.appendChild(downloadAnchor);
- downloadAnchor.click();
- downloadAnchor.remove();
+$('exportBackupBtn').onclick = async () => {
+ try {
+  const backupData = {
+   version: 2,
+   exportDate: new Date().toISOString(),
+   pitcher: localStorage.getItem('softbolPitcher') || '',
+   distance: localStorage.getItem('softbolDistance') || '13.1',
+   targetPct: String(getTargetGoodPct()),
+   videoFps: videoSettings.fpsMode,
+   videoType: videoSettings.recordingType,
+   allowMidChange: localStorage.getItem('softbolAllowMidChange') || 'false',
+   keepAwake: localStorage.getItem('softbolKeepAwake') || 'false',
+   history: history,
+   current: state
+  };
+
+  const jsonText = JSON.stringify(backupData, null, 2);
+  const fileName = `copia-seguridad-softbol-v2-${today()}.json`;
+  const blob = new Blob([jsonText], { type: 'application/json;charset=utf-8' });
+
+  if (navigator.canShare && navigator.share) {
+   try {
+    const file = new File([blob], fileName, { type: 'application/json' });
+    if (navigator.canShare({ files: [file] })) {
+     await navigator.share({
+      files: [file],
+      title: fileName
+     });
+     return;
+    }
+   } catch (shareErr) {
+    if (shareErr && shareErr.name === 'AbortError') return;
+   }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.href = url;
+  downloadAnchor.download = fileName;
+  downloadAnchor.rel = 'noopener';
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2500);
+ } catch (err) {
+  if (err && err.name === 'AbortError') return;
+  alert('No se pudo exportar la copia de seguridad: ' + (err && err.message ? err.message : err));
+ }
 };
 
 $('importBackupBtn').onclick = () => { $('importFileInput').click(); };
